@@ -1,0 +1,231 @@
+{
+  "app": {
+    "name": "Daybook",
+    "description": "My day at a glance: clock, weather, calendar, notes and ideas."
+  },
+  "lang": {
+    "switchTo": "العربية",
+    "switchAria": "Switch to Arabic",
+    "changed": "Switched to English"
+  },
+  "header": {
+    "moveData": "Move data",
+    "settings": "Settings"
+  },
+  "greet": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "night": "Good night",
+    "comma": ",",
+    "namePh": "your name",
+    "nameAria": "Your name",
+    "todayAria": "Today"
+  },
+  "clock": {
+    "title": "Tap to switch between 12-hour and 24-hour time",
+    "am": "AM",
+    "pm": "PM",
+    "h12": "12-hour clock",
+    "h24": "24-hour clock"
+  },
+  "day": {
+    "gone": "{p}% of today gone",
+    "left": "{dur} left",
+    "yearPos": "Day {d} of {total} · Week {w}",
+    "dur": "{h}h {m}m"
+  },
+  "sun": {
+    "rise": "Sunrise",
+    "set": "Sunset",
+    "riseIn": "Sunrise in {dur}",
+    "daylightLeft": "{dur} of daylight left",
+    "hasSet": "The sun has set"
+  },
+  "summary": {
+    "plansToday": {
+      "one": "{n} plan today",
+      "other": "{n} plans today"
+    },
+    "notes": {
+      "one": "{n} note",
+      "other": "{n} notes"
+    },
+    "ideas": {
+      "one": "{n} idea",
+      "other": "{n} ideas"
+    }
+  },
+  "wx": {
+    "title": "Weather",
+    "setLocation": "Set location",
+    "unitTitle": "Switch between °C and °F",
+    "unitC": "°C",
+    "unitF": "°F",
+    "askWhere": "Where are you? Use your location or search for a city.",
+    "changeWhere": "Change your location:",
+    "searchPh": "Search a city, e.g. Lisbon",
+    "searchAria": "Search a city",
+    "useMyLocation": "Use my location",
+    "finding": "Finding you…",
+    "noGeo": "This browser can't share your location. Search for your city instead.",
+    "previewGeo": "Location only works on your Daybook website. Search for your city, or open the website.",
+    "geoDenied": "Location permission is off. Allow location for this site in your browser settings, or search for your city below.",
+    "geoFailed": "Couldn't find your location just now. Try again, or search for your city below.",
+    "noMatch": "No places match “{q}”. Try the city name only.",
+    "searchDown": "City search isn't reachable right now. Check your connection.",
+    "searchOnSite": "City search works on your website:",
+    "loadError": "Couldn't load the weather. Check your internet connection, then try again.",
+    "previewError": "This preview can't reach the weather service. Live weather and your location work on your Daybook website.",
+    "openSite": "Open my Daybook website",
+    "retry": "Try again",
+    "feels": "Feels like {t}°",
+    "hi": "H {t}°",
+    "lo": "L {t}°",
+    "humidity": "Humidity",
+    "wind": "Wind",
+    "rain": "Rain",
+    "kmh": "{v} km/h",
+    "mph": "{v} mph",
+    "now": "Now",
+    "today": "Today",
+    "hoursAria": "Next 12 hours",
+    "daysAria": "Next days",
+    "updated": "Updated {ago} · Data from Open-Meteo",
+    "setTo": "Weather set to {city}",
+    "refreshFailed": "Couldn't refresh the weather",
+    "myLocation": "My location",
+    "cond": {
+      "clear": "Clear sky",
+      "mostlyClear": "Mostly clear",
+      "partly": "Partly cloudy",
+      "overcast": "Overcast",
+      "fog": "Foggy",
+      "drizzle": "Drizzle",
+      "lightRain": "Light rain",
+      "rain": "Rain",
+      "heavyRain": "Heavy rain",
+      "snow": "Snow",
+      "rainShowers": "Rain showers",
+      "snowShowers": "Snow showers",
+      "storm": "Thunderstorm",
+      "cloudy": "Cloudy"
+    }
+  },
+  "cal": {
+    "prev": "Previous month",
+    "next": "Next month",
+    "today": "Today",
+    "todayPrefix": "Today · ",
+    "empty": "Nothing planned yet. Add something below.",
+    "timeAria": "Time (optional)",
+    "planPh": "Add a plan for this day",
+    "planAria": "Plan",
+    "add": "Add",
+    "allDay": "All day",
+    "remove": "Remove plan",
+    "added": "Plan added",
+    "removed": "Plan removed",
+    "plans": {
+      "one": "{n} plan",
+      "other": "{n} plans"
+    }
+  },
+  "notes": {
+    "title": "Notes",
+    "ph": "Write a quick note…",
+    "newAria": "New note",
+    "color": "Note color",
+    "yellow": "Yellow",
+    "pink": "Pink",
+    "green": "Green",
+    "blue": "Blue",
+    "hint": "Ctrl + Enter to add",
+    "add": "Add note",
+    "empty": "No notes yet. Write your first one in the box above.",
+    "noteAria": "Note",
+    "delete": "Delete note",
+    "example": "Example",
+    "added": "Note added",
+    "deleted": "Note deleted",
+    "search": "Search notes",
+    "noMatch": "No notes match your search."
+  },
+  "ideas": {
+    "title": "Ideas",
+    "new": "+ New idea",
+    "titlePh": "Give it a name",
+    "titleAria": "Idea title",
+    "bodyPh": "Write anything. It saves as you type.",
+    "bodyAria": "Idea",
+    "saved": "Saved",
+    "delete": "Delete",
+    "confirm": "Delete this idea?",
+    "keep": "Keep it",
+    "untitled": "Untitled idea",
+    "emptySnippet": "Empty",
+    "empty": "No ideas yet. Press “New idea” to start writing.",
+    "deleted": "Idea deleted",
+    "words": {
+      "one": "{n} word",
+      "other": "{n} words"
+    }
+  },
+  "sync": {
+    "title": "Move your data",
+    "intro": "Notes, plans and ideas are saved on each device. To bring them to your phone or laptop, copy them here and paste them there.",
+    "here": "On this device",
+    "copy": "Copy my data",
+    "saveFile": "Save backup file",
+    "codeAria": "Your data code",
+    "there": "On your other device",
+    "pastePh": "Paste the code here",
+    "pasteAria": "Paste data code",
+    "load": "Add to this device",
+    "loadFile": "Load backup file",
+    "footnote": "Adding keeps everything already here and keeps the newest version of each note and idea. Deleting something on one device doesn't delete it on the other.",
+    "copied": "Copied. Paste it on your other device",
+    "selectCopy": "Select the code and copy it",
+    "done": "Added. {items} checked. Reloading…",
+    "items": {
+      "one": "{n} item",
+      "other": "{n} items"
+    },
+    "badCode": "That code didn't work. Copy the whole code again, starting with DAYBOOK, and paste it here.",
+    "pasteFirst": "Paste the code from your other device first.",
+    "fileSaved": "Backup saved",
+    "fileFailed": "Couldn't save the file. Use Copy my data instead."
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark",
+    "motion": "Background animation",
+    "on": "On",
+    "off": "Off",
+    "temp": "Temperature",
+    "clock": "Clock",
+    "h24": "24-hour",
+    "h12": "12-hour",
+    "weekStart": "Week starts on",
+    "motionOn": "Animations on",
+    "motionOff": "Animations off"
+  },
+  "common": {
+    "undo": "Undo",
+    "restored": "Restored",
+    "close": "Close",
+    "storageFull": "Couldn't save. Your browser storage is full or blocked."
+  },
+  "examples": {
+    "note1": "Example note: click any note to edit it. Changes save by themselves.",
+    "note2": "Example: oat milk, call Mom, return the library books",
+    "ideaTitle": "Example idea: weekend market stall",
+    "ideaBody": "Hand-printed tote bags with local bird drawings.\n\n• Test three designs with friends\n• Price around $18\n• Ask about a spot at the Saturday market",
+    "plan1": "Example: evening walk",
+    "plan2": "Example: call the dentist"
+  }
+}

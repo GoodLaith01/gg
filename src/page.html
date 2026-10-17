@@ -1,0 +1,264 @@
+<title>Daybook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<script>
+  /* Set language and direction before anything paints, so Arabic never flashes in English. */
+  (function () {
+    var l = "en";
+    try { l = JSON.parse(localStorage.getItem("daybook:lang")) || ((navigator.language || "").slice(0, 2) === "ar" ? "ar" : "en"); } catch (e) {}
+    document.documentElement.lang = l === "ar" ? "ar" : "en";
+    document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Readex+Pro:wght@400..700&display=swap" rel="stylesheet">
+<style>
+/*@STYLE@*/
+</style>
+
+<div class="sky" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="var(--accent)"/><path d="M6 20a10 10 0 0 1 20 0" fill="none" stroke="var(--accent-ink)" stroke-width="2.4" stroke-linecap="round"/><circle cx="16" cy="13" r="3.4" fill="var(--accent-ink)"/></svg>
+      <span data-i18n="app.name">Daybook</span>
+    </div>
+    <div class="head-actions">
+      <button id="lang-btn" class="chip lang-chip" type="button" data-i18n-aria="lang.switchAria">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+        <span data-i18n="lang.switchTo">العربية</span>
+      </button>
+      <button id="sync-btn" class="chip" type="button" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg>
+        <span data-i18n="header.moveData">Move data</span>
+      </button>
+      <button id="settings-btn" class="icon-btn" type="button" aria-haspopup="dialog" data-i18n-aria="header.settings" data-i18n-title="header.settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- TODAY -->
+    <section class="card hero" style="--i:0" data-i18n-aria="greet.todayAria">
+      <h1 class="greet"><span id="greet">Good day</span><span data-i18n="greet.comma">,</span>&nbsp;<input id="name-input" type="text" placeholder="your name" maxlength="24" autocomplete="off" spellcheck="false" data-i18n-ph="greet.namePh" data-i18n-aria="greet.nameAria"><span id="name-mirror" aria-hidden="true"></span></h1>
+      <p class="date-line" id="date-line">&nbsp;</p>
+      <button id="clock-btn" class="clock" type="button" dir="ltr" data-i18n-title="clock.title">
+        <span id="clock"></span>
+        <span class="clock-side"><span id="secs">00</span><span id="ampm" hidden></span></span>
+      </button>
+      <div class="hero-meta">
+        <div class="dayprog">
+          <div class="dp-head"><span id="day-pct"></span><b id="day-left"></b></div>
+          <div id="day-bar" class="bar"><i></i></div>
+          <p id="doy" class="mono"></p>
+        </div>
+        <div id="sun-box" class="sunbox" hidden>
+          <svg viewBox="0 0 300 96" aria-hidden="true">
+            <line x1="0" x2="300" y1="82" y2="82" class="horizon"/>
+            <path id="arc-path" class="arc" d="M14 82 Q150 -38 286 82"/>
+            <path id="arc-done" class="arc-done" d="M14 82 Q150 -38 286 82"/>
+            <circle id="sun-dot" cx="14" cy="82" r="7"/>
+          </svg>
+          <div class="sun-times"><span><span data-i18n="sun.rise">Sunrise</span> <b id="sunrise" class="mono">--</b></span><span><span data-i18n="sun.set">Sunset</span> <b id="sunset" class="mono">--</b></span></div>
+          <p id="sun-note"></p>
+        </div>
+      </div>
+      <div class="summary" id="summary"></div>
+    </section>
+
+    <!-- WEATHER -->
+    <section class="card weather" style="--i:1" aria-labelledby="wx-h">
+      <div class="card-head">
+        <h2 id="wx-h" data-i18n="wx.title">Weather</h2>
+        <div class="head-actions">
+          <button id="wx-place-btn" class="chip" type="button" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+            <span id="wx-place">Set location</span>
+          </button>
+          <button id="unit-btn" class="chip" type="button" data-i18n-title="wx.unitTitle">°C</button>
+        </div>
+      </div>
+      <div id="wx-search" class="wx-search" hidden>
+        <p id="wx-search-msg" class="muted"></p>
+        <div class="search-row">
+          <input id="city-input" type="search" placeholder="Search a city" autocomplete="off" data-i18n-ph="wx.searchPh" data-i18n-aria="wx.searchAria">
+          <button id="locate-btn" class="btn accent" type="button" data-i18n="wx.useMyLocation">Use my location</button>
+        </div>
+        <ul id="city-results" class="results"></ul>
+      </div>
+      <div id="wx-loading" hidden><div class="skel" style="width:60%;height:60px"></div><div class="skel"></div><div class="skel" style="width:80%"></div><div class="skel" style="width:70%"></div></div>
+      <div id="wx-error" class="wx-error" hidden>
+        <p id="wx-error-msg"></p>
+        <div class="row">
+          <button id="wx-retry" class="btn" type="button" data-i18n="wx.retry">Try again</button>
+          <a id="wx-site-link" class="btn accent" href="https://goodlaith01.github.io/gg/" target="_blank" rel="noopener" hidden data-i18n="wx.openSite">Open my Daybook website</a>
+        </div>
+      </div>
+      <div id="wx-body" hidden>
+        <div class="wx-now">
+          <div id="wx-icon" class="wx-icon"></div>
+          <div>
+            <div class="wx-temp" dir="ltr"><span id="wx-temp">--</span><sup>°</sup></div>
+            <div id="wx-cond" class="wx-cond"></div>
+            <div id="wx-feels" class="muted small"></div>
+          </div>
+          <div class="wx-hl"><span id="wx-hi"></span><span id="wx-lo"></span></div>
+        </div>
+        <div class="wx-stats">
+          <div class="stat"><span data-i18n="wx.humidity">Humidity</span><b id="wx-hum">--</b></div>
+          <div class="stat"><span data-i18n="wx.wind">Wind</span><b id="wx-wind">--</b></div>
+          <div class="stat"><span data-i18n="wx.rain">Rain</span><b id="wx-rain">--</b></div>
+        </div>
+        <div class="hourly" id="wx-hourly" data-i18n-aria="wx.hoursAria"></div>
+        <ul class="daily" id="wx-daily" data-i18n-aria="wx.daysAria"></ul>
+        <p class="muted small" id="wx-updated"></p>
+      </div>
+    </section>
+
+    <!-- CALENDAR -->
+    <section class="card calendar" style="--i:2" aria-labelledby="cal-title">
+      <div class="card-head">
+        <h2 id="cal-title">Calendar</h2>
+        <div class="head-actions">
+          <button id="cal-prev" class="icon-btn" type="button" data-i18n-aria="cal.prev"><svg class="flip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
+          <button id="cal-today" class="chip" type="button" data-i18n="cal.today">Today</button>
+          <button id="cal-next" class="icon-btn" type="button" data-i18n-aria="cal.next"><svg class="flip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+        </div>
+      </div>
+      <div class="cal-week" id="cal-week"></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="day-panel">
+        <h3 id="day-title"></h3>
+        <ul id="day-list" class="day-list"></ul>
+        <p id="day-empty" class="muted small" data-i18n="cal.empty">Nothing planned yet. Add something below.</p>
+        <form id="ev-form" class="ev-form" autocomplete="off">
+          <input id="ev-time" type="time" data-i18n-aria="cal.timeAria">
+          <input id="ev-text" type="text" maxlength="120" placeholder="Add a plan for this day" data-i18n-ph="cal.planPh" data-i18n-aria="cal.planAria">
+          <button class="btn accent" type="submit" data-i18n="cal.add">Add</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- NOTES -->
+    <section class="card notes" style="--i:3" aria-labelledby="notes-h">
+      <div class="card-head">
+        <h2 id="notes-h"><span data-i18n="notes.title">Notes</span> <span id="notes-count" class="count mono">0</span></h2>
+        <input id="notes-search" class="search-mini" type="search" autocomplete="off" placeholder="Search notes" data-i18n-ph="notes.search" data-i18n-aria="notes.search">
+      </div>
+      <form id="note-form" class="note-form">
+        <textarea id="note-new" rows="2" placeholder="Write a quick note…" data-i18n-ph="notes.ph" data-i18n-aria="notes.newAria"></textarea>
+        <div class="note-form-row">
+          <div class="swatches" role="group" data-i18n-aria="notes.color">
+            <button type="button" class="sw c1" data-c="1" data-i18n-aria="notes.yellow" aria-pressed="true"></button>
+            <button type="button" class="sw c2" data-c="2" data-i18n-aria="notes.pink" aria-pressed="false"></button>
+            <button type="button" class="sw c3" data-c="3" data-i18n-aria="notes.green" aria-pressed="false"></button>
+            <button type="button" class="sw c4" data-c="4" data-i18n-aria="notes.blue" aria-pressed="false"></button>
+          </div>
+          <span class="hint muted small" data-i18n="notes.hint">Ctrl + Enter to add</span>
+          <button class="btn accent" type="submit" data-i18n="notes.add">Add note</button>
+        </div>
+      </form>
+      <div id="notes-list" class="notes-list"></div>
+      <p id="notes-empty" class="empty" hidden data-i18n="notes.empty">No notes yet.</p>
+      <p id="notes-nomatch" class="empty" hidden data-i18n="notes.noMatch">No notes match your search.</p>
+    </section>
+
+    <!-- IDEAS -->
+    <section class="card ideas" style="--i:4" aria-labelledby="ideas-h">
+      <div class="card-head">
+        <h2 id="ideas-h"><span data-i18n="ideas.title">Ideas</span> <span id="ideas-count" class="count mono">0</span></h2>
+        <button id="idea-new" class="btn accent" type="button" data-i18n="ideas.new">+ New idea</button>
+      </div>
+      <div class="ideas-body">
+        <ul id="idea-list" class="idea-list"></ul>
+        <div class="editor" id="idea-editor">
+          <textarea id="idea-title" class="idea-title" rows="1" maxlength="90" placeholder="Give it a name" data-i18n-ph="ideas.titlePh" data-i18n-aria="ideas.titleAria"></textarea>
+          <textarea id="idea-body" class="idea-body" placeholder="Write anything." data-i18n-ph="ideas.bodyPh" data-i18n-aria="ideas.bodyAria"></textarea>
+          <div class="editor-foot">
+            <span id="idea-words" class="small muted"></span>
+            <span id="idea-status" class="saved small" data-i18n="ideas.saved">Saved</span>
+            <span class="spacer"></span>
+            <span id="idea-confirm" hidden><span data-i18n="ideas.confirm">Delete this idea?</span>
+              <button id="idea-yes" class="btn danger" type="button" data-i18n="ideas.delete">Delete</button>
+              <button id="idea-no" class="btn" type="button" data-i18n="ideas.keep">Keep it</button>
+            </span>
+            <button id="idea-del" class="btn ghost" type="button" data-i18n="ideas.delete">Delete</button>
+          </div>
+        </div>
+        <div id="idea-empty" class="empty" hidden data-i18n="ideas.empty">No ideas yet.</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MOVE DATA -->
+<dialog id="sync-dlg" class="dlg" aria-labelledby="sync-h">
+  <form method="dialog" class="dlg-close"><button class="x" data-i18n-aria="common.close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></form>
+  <h2 id="sync-h" data-i18n="sync.title">Move your data</h2>
+  <p class="muted small" data-i18n="sync.intro"></p>
+  <div class="step">
+    <h3><span class="num">1</span> <span data-i18n="sync.here">On this device</span></h3>
+    <div class="row">
+      <button id="sync-copy" class="btn accent" type="button" data-i18n="sync.copy">Copy my data</button>
+      <button id="sync-save" class="btn" type="button" data-i18n="sync.saveFile">Save backup file</button>
+    </div>
+    <textarea id="sync-out" class="code" rows="3" readonly hidden dir="ltr" data-i18n-aria="sync.codeAria"></textarea>
+  </div>
+  <div class="step">
+    <h3><span class="num">2</span> <span data-i18n="sync.there">On your other device</span></h3>
+    <textarea id="sync-in" class="code" rows="3" dir="ltr" placeholder="Paste the code here" data-i18n-ph="sync.pastePh" data-i18n-aria="sync.pasteAria"></textarea>
+    <div class="row">
+      <button id="sync-load" class="btn accent" type="button" data-i18n="sync.load">Add to this device</button>
+      <label class="btn" for="sync-file" data-i18n="sync.loadFile">Load backup file</label>
+      <input id="sync-file" type="file" accept=".json,application/json,text/plain" hidden>
+    </div>
+    <p id="sync-msg" class="small muted" role="status"></p>
+  </div>
+  <p class="small muted" data-i18n="sync.footnote"></p>
+</dialog>
+
+<!-- SETTINGS -->
+<dialog id="settings-dlg" class="dlg" aria-labelledby="settings-h">
+  <form method="dialog" class="dlg-close"><button class="x" data-i18n-aria="common.close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></form>
+  <h2 id="settings-h" data-i18n="settings.title">Settings</h2>
+  <form id="settings-form" class="settings">
+    <fieldset class="seg"><legend data-i18n="settings.language">Language</legend>
+      <label><input type="radio" name="lang" id="s-lang-en" value="en"><span>English</span></label>
+      <label><input type="radio" name="lang" id="s-lang-ar" value="ar"><span>العربية</span></label>
+    </fieldset>
+    <fieldset class="seg"><legend data-i18n="settings.theme">Theme</legend>
+      <label><input type="radio" name="theme" id="s-theme-system" value="system"><span data-i18n="settings.system">System</span></label>
+      <label><input type="radio" name="theme" id="s-theme-light" value="light"><span data-i18n="settings.light">Light</span></label>
+      <label><input type="radio" name="theme" id="s-theme-dark" value="dark"><span data-i18n="settings.dark">Dark</span></label>
+    </fieldset>
+    <fieldset class="seg"><legend data-i18n="settings.motion">Background animation</legend>
+      <label><input type="radio" name="motion" id="s-motion-on" value="on"><span data-i18n="settings.on">On</span></label>
+      <label><input type="radio" name="motion" id="s-motion-off" value="off"><span data-i18n="settings.off">Off</span></label>
+    </fieldset>
+    <fieldset class="seg"><legend data-i18n="settings.temp">Temperature</legend>
+      <label><input type="radio" name="unit" id="s-unit-c" value="c"><span data-i18n="wx.unitC">°C</span></label>
+      <label><input type="radio" name="unit" id="s-unit-f" value="f"><span data-i18n="wx.unitF">°F</span></label>
+    </fieldset>
+    <fieldset class="seg"><legend data-i18n="settings.clock">Clock</legend>
+      <label><input type="radio" name="clock" id="s-clock-24" value="24"><span data-i18n="settings.h24">24-hour</span></label>
+      <label><input type="radio" name="clock" id="s-clock-12" value="12"><span data-i18n="settings.h12">12-hour</span></label>
+    </fieldset>
+    <fieldset class="seg"><legend data-i18n="settings.weekStart">Week starts on</legend>
+      <label><input type="radio" name="week" id="s-week-6" value="6"><span class="wd" data-day="6">Saturday</span></label>
+      <label><input type="radio" name="week" id="s-week-0" value="0"><span class="wd" data-day="0">Sunday</span></label>
+      <label><input type="radio" name="week" id="s-week-1" value="1"><span class="wd" data-day="1">Monday</span></label>
+    </fieldset>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"><span id="toast-msg"></span><button id="toast-act" type="button" hidden></button></div>
+
+<script>
+window.DAYBOOK_I18N = /*@I18N@*/;
+</script>
+<script>
+/*@SCRIPT@*/
+</script>

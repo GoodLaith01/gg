@@ -1,0 +1,3 @@
+# Tools for building and testing Daybook (the website itself needs nothing installed).
+pytest==9.1.1
+playwright==1.64.0

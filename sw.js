@@ -1,5 +1,5 @@
-// Daybook offline support. Bump VERSION when the site changes.
-const VERSION = "daybook-v2";
+// Daybook offline support. tools/build.py stamps VERSION with a hash of the site, so every release refreshes the cache.
+const VERSION = "daybook-0fcd2cfe27cb";
 const CORE = ["./", "index.html", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
