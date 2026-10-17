@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skill Sky</title>
+<style>
+  :root { --ink: #e8ecff; --muted: #8b93c4; --gold: #ffe9a8; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #05060f; color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .bar { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); width: min(520px, calc(100% - 32px));
+    display: flex; gap: 8px; padding: 8px; border-radius: 999px;
+    background: rgba(15, 18, 40, .7); border: 1px solid rgba(160, 175, 255, .25); backdrop-filter: blur(8px); }
+  .bar input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--ink);
+    font-size: 16px; padding: 8px 14px; }
+  .bar input::placeholder { color: var(--muted); }
+  .bar button { border: 0; border-radius: 999px; padding: 8px 18px; font-size: 15px; cursor: pointer;
+    background: var(--gold); color: #2a2200; font-weight: 600; }
+  .bar button:hover { filter: brightness(1.08); }
+  .hud { position: fixed; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between;
+    pointer-events: none; font-size: 14px; color: var(--muted); }
+  .hud b { color: var(--ink); font-weight: 600; }
+  .tip { position: fixed; pointer-events: none; padding: 4px 10px; border-radius: 8px; font-size: 13px;
+    background: rgba(15, 18, 40, .85); border: 1px solid rgba(160, 175, 255, .3); opacity: 0;
+    transform: translate(-50%, -140%); transition: opacity .15s; white-space: nowrap; }
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<div class="hud"><span><b id="count">0</b> skills shining</span><span>double-click a star to remove it</span></div>
+<div class="tip" id="tip"></div>
+<form class="bar" id="form" autocomplete="off">
+  <input id="name" placeholder="Add a skill, e.g. Python" maxlength="40" aria-label="Skill name">
+  <button type="submit">Add star</button>
+</form>
+<script>
+const SKILLS = [
+  "Architecture", "Code review", "Debugging", "Documentation", "Testing strategy", "System design",
+  "Tech debt", "Incident response", "SQL queries", "Data analysis", "Data visualization", "Statistics",
+  "Dashboards", "Word docs", "PowerPoint", "Spreadsheets", "PDF", "Deep research", "Claude API",
+  "Security review", "Git & GitHub", "Artifacts", "Plugins", "Browser automation"
+];
+const STORE = "skill-sky-v1";
+
+const cv = document.getElementById("sky"), ctx = cv.getContext("2d");
+const tip = document.getElementById("tip"), countEl = document.getElementById("count");
+let W, H, dpr, bg = [], stars = [], bursts = [], shooters = [], hover = null;
+
+function resize() {
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  bg = Array.from({ length: Math.round(W * H / 4500) }, () => ({
+    x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.1 + .2,
+    p: Math.random() * 6.28, s: Math.random() * 1.5 + .5
+  }));
+  stars.forEach(s => { s.x = s.fx * W; s.y = s.fy * H; });
+}
+
+function load() {
+  try { const v = JSON.parse(localStorage.getItem(STORE)); if (Array.isArray(v)) return v; } catch (e) {}
+  return null;
+}
+function save() {
+  try { localStorage.setItem(STORE, JSON.stringify(stars.map(s => ({ n: s.name, x: s.fx, y: s.fy })))); } catch (e) {}
+}
+
+function place() {
+  for (let i = 0; i < 60; i++) {
+    const fx = .06 + Math.random() * .88, fy = .12 + Math.random() * .62;
+    if (stars.every(s => Math.hypot((s.fx - fx) * W, (s.fy - fy) * H) > 70)) return [fx, fy];
+  }
+  return [.06 + Math.random() * .88, .12 + Math.random() * .62];
+}
+
+function addStar(name, pos, animate) {
+  const [fx, fy] = pos || place();
+  const hue = [48, 200, 275, 330, 160][stars.length % 5];
+  const s = { name, fx, fy, x: fx * W, y: fy * H, hue, size: 3 + Math.random() * 2.5,
+    phase: Math.random() * 6.28, born: animate ? performance.now() : -1e9 };
+  stars.push(s);
+  if (animate) bursts.push({ x: s.x, y: s.y, hue, t: performance.now() });
+  countEl.textContent = stars.length;
+  save();
+}
+
+function drawStar(s, now) {
+  const age = Math.min((now - s.born) / 1400, 1);
+  const pop = age < 1 ? 1 + 2.2 * Math.pow(1 - age, 2) : 1;          // flare when newly added
+  const tw = .75 + .25 * Math.sin(now / 600 * 1 + s.phase);           // gentle shimmer
+  const r = s.size * pop * (hover === s ? 1.5 : 1);
+  const glow = r * 9 * tw;
+  const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, glow);
+  g.addColorStop(0, `hsla(${s.hue},100%,88%,.95)`);
+  g.addColorStop(.25, `hsla(${s.hue},100%,70%,.35)`);
+  g.addColorStop(1, `hsla(${s.hue},100%,60%,0)`);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, s.y, glow, 0, 6.283); ctx.fill();
+  // four-point sparkle
+  const L = r * 5 * tw;
+  ctx.fillStyle = `hsla(${s.hue},100%,92%,.9)`;
+  ctx.beginPath();
+  ctx.moveTo(s.x, s.y - L); ctx.quadraticCurveTo(s.x, s.y, s.x + L, s.y);
+  ctx.quadraticCurveTo(s.x, s.y, s.x, s.y + L); ctx.quadraticCurveTo(s.x, s.y, s.x - L, s.y);
+  ctx.quadraticCurveTo(s.x, s.y, s.x, s.y - L); ctx.fill();
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(s.x, s.y, r * .6, 0, 6.283); ctx.fill();
+  // label
+  ctx.font = "12px system-ui, sans-serif"; ctx.textAlign = "center";
+  ctx.fillStyle = `rgba(232,236,255,${hover === s ? .95 : .55})`;
+  ctx.fillText(s.name, s.x, s.y + r * 5 + 16);
+}
+
+function frame(now) {
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, "#04050d"); sky.addColorStop(.7, "#0b1030"); sky.addColorStop(1, "#1a1440");
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
+  for (const b of bg) {
+    ctx.globalAlpha = .35 + .65 * (.5 + .5 * Math.sin(now / 1000 * b.s + b.p));
+    ctx.fillStyle = "#cfd8ff"; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 6.283); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  if (Math.random() < .004 && shooters.length < 2)
+    shooters.push({ x: Math.random() * W * .8, y: Math.random() * H * .35, vx: 7 + Math.random() * 4, vy: 3 + Math.random() * 2, life: 1 });
+  shooters = shooters.filter(s => s.life > 0);
+  for (const s of shooters) {
+    const t = ctx.createLinearGradient(s.x, s.y, s.x - s.vx * 9, s.y - s.vy * 9);
+    t.addColorStop(0, `rgba(255,255,255,${s.life})`); t.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.strokeStyle = t; ctx.lineWidth = 1.6; ctx.beginPath();
+    ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.vx * 9, s.y - s.vy * 9); ctx.stroke();
+    s.x += s.vx; s.y += s.vy; s.life -= .015;
+  }
+
+  for (const s of stars) drawStar(s, now);
+
+  bursts = bursts.filter(b => now - b.t < 1200);
+  for (const b of bursts) {
+    const k = (now - b.t) / 1200;
+    ctx.strokeStyle = `hsla(${b.hue},100%,80%,${1 - k})`; ctx.lineWidth = 2 * (1 - k) + .5;
+    ctx.beginPath(); ctx.arc(b.x, b.y, 8 + k * 90, 0, 6.283); ctx.stroke();
+    for (let i = 0; i < 10; i++) {
+      const a = i / 10 * 6.283 + b.t, d = k * 70;
+      ctx.fillStyle = `hsla(${b.hue},100%,85%,${1 - k})`;
+      ctx.beginPath(); ctx.arc(b.x + Math.cos(a) * d, b.y + Math.sin(a) * d, 1.8 * (1 - k), 0, 6.283); ctx.fill();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function pick(e) {
+  return stars.find(s => Math.hypot(s.x - e.clientX, s.y - e.clientY) < 22) || null;
+}
+cv.addEventListener("pointermove", e => {
+  hover = pick(e);
+  cv.style.cursor = hover ? "pointer" : "default";
+  tip.style.opacity = hover ? 1 : 0;
+  if (hover) { tip.textContent = hover.name; tip.style.left = hover.x + "px"; tip.style.top = hover.y + "px"; }
+});
+cv.addEventListener("dblclick", e => {
+  const s = pick(e); if (!s) return;
+  stars.splice(stars.indexOf(s), 1); hover = null; tip.style.opacity = 0;
+  countEl.textContent = stars.length; save();
+});
+
+document.getElementById("form").addEventListener("submit", e => {
+  e.preventDefault();
+  const input = document.getElementById("name"), name = input.value.trim();
+  if (!name) return;
+  if (!stars.some(s => s.name.toLowerCase() === name.toLowerCase())) addStar(name, null, true);
+  input.value = "";
+});
+
+addEventListener("resize", resize);
+resize();
+const saved = load();
+if (saved) saved.forEach(s => addStar(s.n, [s.x, s.y], false));
+else SKILLS.forEach((n, i) => setTimeout(() => addStar(n, null, true), 300 + i * 220));  // first visit: stars light up one by one
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
