@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="My day at a glance: clock, weather, calendar, notes and ideas.">
+<meta name="theme-color" content="#9cc1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#060b19" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daybook">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>Daybook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: a floating glass desk over a living sky. 12-column grid: clock hero + weather on top, calendar + notes, then a wide idea journal. */
+:root{
+  --sky-top:#9cc1ea; --sky-mid:#d3e3f3; --sky-low:#f8dcc2;
+  --glow1:#ffcc9e; --glow2:#a3d6f0; --glow3:#f4b4a0;
+  --bg:#dfe9f4;
+  --glass:rgba(255,255,255,.74); --glass-strong:rgba(255,255,255,.82); --panel:#f6f9fd; --line:rgba(30,50,80,.11);
+  --fg:#172235; --muted:#56637a; --faint:rgba(23,34,53,.07);
+  --accent:#dd6430; --accent-ink:#ffffff; --accent-soft:rgba(221,100,48,.13);
+  --teal:#1f8a86;
+  --sun:#f4a524; --cloud:#ffffff; --cloud-edge:#b3c1d6; --rain:#3d8fd6; --snow:#8fb0d6; --bolt:#f0bd12;
+  --n1:#fff0b3; --n2:#ffdcd8; --n3:#d3f1de; --n4:#d8e8ff; --note-ink:#2a2a22;
+  --danger:#c43d3d;
+  --shadow:0 1px 0 rgba(255,255,255,.65) inset, 0 18px 40px -18px rgba(30,50,90,.35);
+  --fx:255,255,255;
+  --font-display:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-body:"Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r:26px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sky-top:#060b19; --sky-mid:#121a36; --sky-low:#3b2742;
+    --glow1:#b8573a; --glow2:#1f5f82; --glow3:#8a3a5e;
+    --bg:#0b1020;
+    --glass:rgba(16,22,42,.78); --glass-strong:rgba(24,32,58,.9); --panel:#141b33; --line:rgba(200,215,255,.10);
+    --fg:#eef2fa; --muted:#9ba8c2; --faint:rgba(238,242,250,.07);
+    --accent:#ff9a5c; --accent-ink:#24120a; --accent-soft:rgba(255,154,92,.16);
+    --teal:#6fd6cc;
+    --sun:#ffc04d; --cloud:#c9d3e6; --cloud-edge:#7b88a3; --rain:#7cc0ff; --snow:#dfe9ff; --bolt:#ffd84a;
+    --n1:#463f1f; --n2:#4a2b31; --n3:#1e4131; --n4:#223358; --note-ink:#f2ede0;
+    --danger:#ff7b7b;
+    --shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 22px 50px -20px rgba(0,0,0,.75);
+    --fx:220,230,255;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --sky-top:#060b19; --sky-mid:#121a36; --sky-low:#3b2742;
+  --glow1:#b8573a; --glow2:#1f5f82; --glow3:#8a3a5e;
+  --bg:#0b1020;
+  --glass:rgba(16,22,42,.78); --glass-strong:rgba(24,32,58,.9); --panel:#141b33; --line:rgba(200,215,255,.10);
+  --fg:#eef2fa; --muted:#9ba8c2; --faint:rgba(238,242,250,.07);
+  --accent:#ff9a5c; --accent-ink:#24120a; --accent-soft:rgba(255,154,92,.16);
+  --teal:#6fd6cc;
+  --sun:#ffc04d; --cloud:#c9d3e6; --cloud-edge:#7b88a3; --rain:#7cc0ff; --snow:#dfe9ff; --bolt:#ffd84a;
+  --n1:#463f1f; --n2:#4a2b31; --n3:#1e4131; --n4:#223358; --note-ink:#f2ede0;
+  --danger:#ff7b7b;
+  --shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 22px 50px -20px rgba(0,0,0,.75);
+  --fx:220,230,255;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+/* ---------- sky ---------- */
+.sky{position:fixed;inset:0;z-index:0;overflow:hidden;contain:strict;background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 55%,var(--sky-low) 100%);transition:background 1.2s var(--ease)}
+.blob{position:absolute;border-radius:50%;opacity:.75;will-change:transform;backface-visibility:hidden}
+.calm .blob{animation:none!important}
+.b1{width:46vmax;height:46vmax;background:radial-gradient(closest-side,var(--glow1),transparent);left:-12vmax;bottom:-18vmax;animation:drift1 40s ease-in-out infinite alternate}
+.b2{width:38vmax;height:38vmax;background:radial-gradient(closest-side,var(--glow2),transparent);right:-10vmax;top:-14vmax;animation:drift2 46s ease-in-out infinite alternate}
+.b3{width:28vmax;height:28vmax;background:radial-gradient(closest-side,var(--glow3),transparent);left:40%;top:45%;opacity:.5;animation:drift3 52s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(14vmax,-8vmax) scale(1.15)}}
+@keyframes drift2{to{transform:translate(-12vmax,10vmax) scale(.9)}}
+@keyframes drift3{to{transform:translate(-18vmax,-12vmax) scale(1.25)}}
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+
+/* ---------- frame ---------- */
+.wrap{position:relative;z-index:2;max-width:1240px;margin:0 auto;padding-block:22px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;animation:rise .7s var(--ease) both}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-.01em}
+.brand svg{width:30px;height:30px}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px}
+.hero{grid-column:span 7}.weather{grid-column:span 5}.calendar{grid-column:span 5}.notes{grid-column:span 7}.ideas{grid-column:span 12}
+@media (max-width:980px){.hero,.weather,.calendar,.notes,.ideas{grid-column:span 12}}
+
+.card{position:relative;min-width:0;background:var(--glass);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);animation:rise .6s var(--ease) both;animation-delay:calc(var(--i,0) * 60ms + 40ms)}
+@keyframes rise{from{opacity:.25;transform:translateY(22px) scale(.985)}}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+h2{margin:0;font-family:var(--font-display);font-size:20px;font-weight:650;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.head-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.count{font-size:12px;font-weight:500;color:var(--muted);background:var(--faint);padding:2px 8px;border-radius:99px}
+
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--glass-strong);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:500;transition:transform .2s var(--ease),background .2s}
+.chip:hover{transform:translateY(-1px)}
+.chip svg{width:15px;height:15px;flex:none}
+.icon-btn{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--glass-strong);transition:transform .2s var(--ease)}
+.icon-btn:hover{transform:scale(1.08)}
+.icon-btn svg{width:16px;height:16px}
+.btn{border:1px solid var(--line);background:var(--glass-strong);border-radius:12px;padding:8px 14px;font-weight:600;font-size:14px;transition:transform .18s var(--ease),box-shadow .2s,background .2s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.97)}
+.btn.accent{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:0 8px 20px -10px var(--accent)}
+.btn.ghost{background:transparent}
+.btn.danger{background:var(--danger);color:#fff;border-color:transparent}
+input[type=text],input[type=search],input[type=time],input:not([type]),textarea{border:1px solid var(--line);background:var(--glass-strong);border-radius:12px;padding:9px 12px;outline:none;transition:border-color .2s,box-shadow .2s;min-width:0}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+
+/* ---------- hero ---------- */
+.hero{display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.hero .clock{margin-block:auto}
+.notes{align-self:start}
+.greet{margin:0;font-family:var(--font-display);font-weight:500;font-size:clamp(22px,3.2vw,30px);letter-spacing:-.015em;display:flex;flex-wrap:wrap;align-items:baseline;text-wrap:balance}
+#name-input{border:0;background:transparent;padding:0 2px;font-family:var(--font-display);font-weight:700;font-size:inherit;color:var(--accent);width:6ch;border-radius:6px;box-shadow:none}
+#name-input::placeholder{color:var(--muted);font-weight:400;font-style:italic;opacity:.8}
+#name-input:focus{box-shadow:0 0 0 3px var(--accent-soft)}
+#name-mirror{position:absolute;visibility:hidden;white-space:pre;font-family:var(--font-display);font-weight:700;font-size:clamp(22px,3.2vw,30px)}
+.date-line{margin:0;color:var(--muted);font-size:15px}
+.clock{all:unset;cursor:pointer;display:flex;align-items:flex-start;gap:10px;margin:6px 0 4px;font-family:var(--font-display);font-weight:750;font-size:clamp(72px,12vw,148px);line-height:.92;letter-spacing:-.045em;font-variant-numeric:tabular-nums;border-radius:18px}
+.clock:focus-visible{outline:2px solid var(--accent);outline-offset:6px}
+#clock{display:flex}
+.dg{display:inline-block;min-width:.6em;text-align:center}
+.dg.colon{min-width:.3em;animation:blink 2s steps(1) infinite;color:var(--accent)}
+@keyframes blink{50%{opacity:.25}}
+.dg.roll{animation:roll .55s cubic-bezier(.2,.9,.25,1.25)}
+@keyframes roll{from{transform:translateY(-45%) rotateX(70deg);opacity:0;filter:blur(6px)}}
+.clock-side{display:flex;flex-direction:column;gap:4px;padding-top:.1em;font-size:.24em;letter-spacing:0;font-weight:600}
+#secs{font-family:var(--font-mono);color:var(--accent);font-weight:500}
+#ampm{font-size:.7em;color:var(--muted);font-family:var(--font-mono)}
+.hero-meta{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:end;margin-top:8px}
+@media (max-width:560px){.hero-meta{grid-template-columns:1fr}}
+.dp-head{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);margin-bottom:8px}
+.dp-head b{color:var(--fg);font-weight:600}
+.bar{height:8px;border-radius:99px;background:var(--faint);overflow:hidden}
+.bar i{display:block;height:100%;width:calc(var(--p,0) * 100%);border-radius:inherit;background:linear-gradient(90deg,var(--teal),var(--accent));transition:width 1s var(--ease)}
+#doy{margin:10px 0 0;font-size:12px;color:var(--muted);letter-spacing:.02em}
+.sunbox svg{width:100%;height:auto;display:block;overflow:visible}
+.arc{fill:none;stroke:var(--line);stroke-width:2;stroke-dasharray:3 5}
+.arc-done{fill:none;stroke:var(--sun);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1s var(--ease)}
+.horizon{stroke:var(--line);stroke-width:1.5}
+#sun-dot{fill:var(--sun);filter:drop-shadow(0 0 8px var(--sun));transition:cx 1s var(--ease),cy 1s var(--ease)}
+.sun-times{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
+.sun-times b{color:var(--fg);font-weight:500}
+#sun-note{font-size:12px;color:var(--muted);text-align:center;margin:2px 0 0}
+.summary{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;background:var(--faint);font-size:13px;font-weight:500}
+.pill b{font-family:var(--font-mono);font-weight:500;color:var(--accent)}
+
+/* ---------- weather ---------- */
+.wx-search{display:flex;flex-direction:column;gap:10px;animation:fadeUp .35s var(--ease)}
+.search-row{display:flex;gap:8px;flex-wrap:wrap}
+.search-row input{flex:1 1 160px}
+.results{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.results button{all:unset;cursor:pointer;display:flex;justify-content:space-between;gap:10px;width:100%;box-sizing:border-box;padding:9px 12px;border-radius:12px;transition:background .15s}
+.results button:hover,.results button:focus-visible{background:var(--accent-soft)}
+.results small{color:var(--muted)}
+.wx-now{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px}
+.wx-icon svg{width:96px;height:96px;display:block}
+.wx-temp{font-family:var(--font-display);font-weight:700;font-size:64px;line-height:.9;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.wx-temp sup{font-size:.45em;vertical-align:top;color:var(--accent);margin-left:2px}
+.wx-cond{font-weight:600;font-size:16px;margin-top:4px}
+.wx-hl{text-align:right;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px;align-self:start}
+.wx-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0 14px}
+.stat{background:var(--faint);border-radius:14px;padding:9px 12px}
+.stat span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.stat b{font-family:var(--font-mono);font-weight:500;font-size:15px}
+.hourly{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;scroll-snap-type:x proximity;margin:0 -4px;padding-inline:4px}
+.hr{flex:0 0 58px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;border-radius:16px;font-size:12px;color:var(--muted);animation:fadeUp .4s var(--ease) both;animation-delay:calc(var(--k) * 25ms)}
+.hr.now{background:var(--accent-soft);color:var(--fg)}
+.hr svg{width:30px;height:30px}
+.hr b{font-family:var(--font-mono);font-weight:500;color:var(--fg);font-size:14px}
+.hr em{font-style:normal;color:var(--rain);font-size:11px;min-height:15px}
+.daily{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.daily li{display:grid;grid-template-columns:56px 28px 36px minmax(0,1fr) 36px;align-items:center;gap:10px;padding:5px 0;font-size:14px;animation:fadeUp .4s var(--ease) both;animation-delay:calc(var(--k) * 35ms + 80ms)}
+.daily svg{width:26px;height:26px}
+.daily .lo{color:var(--muted);text-align:right}
+.daily .lo,.daily .hi{font-family:var(--font-mono);font-size:13px}
+.range{position:relative;height:6px;border-radius:99px;background:var(--faint)}
+.range i{position:absolute;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--sun),var(--accent))}
+#wx-updated{margin:12px 0 0}
+.wx-error{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:8px 0}
+.wx-error p{margin:0}
+.skel{height:14px;border-radius:8px;background:linear-gradient(90deg,var(--faint) 0%,var(--glass-strong) 50%,var(--faint) 100%);background-size:200% 100%;animation:shimmer 1.3s linear infinite;margin-bottom:10px}
+@keyframes shimmer{to{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}}
+
+/* weather icon motion: only the big icon moves */
+.hr svg *,.daily svg *,.calm .wx-icon svg *{animation:none!important}
+.rays{transform-box:fill-box;transform-origin:center;animation:spin 22s linear infinite}
+.i-sun circle{transform-box:fill-box;transform-origin:center;animation:pulse 4s ease-in-out infinite}
+.i-moon{transform-box:fill-box;transform-origin:center;animation:sway 7s ease-in-out infinite alternate}
+.i-cloud{animation:float 5s ease-in-out infinite alternate}
+.i-cloud.back{animation-duration:7s;animation-direction:alternate-reverse}
+.drop{animation:drop 1.1s linear infinite}
+.flake{animation:flake 2.6s linear infinite}
+.bolt{animation:flash 2.4s ease-in-out infinite}
+.fogline{animation:fog 4s ease-in-out infinite alternate}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.08)}}
+@keyframes sway{from{transform:rotate(-8deg)}to{transform:rotate(6deg)}}
+@keyframes float{from{transform:translateX(-2.5px)}to{transform:translateX(2.5px)}}
+@keyframes drop{0%{transform:translateY(-5px);opacity:0}25%{opacity:1}100%{transform:translateY(9px);opacity:0}}
+@keyframes flake{0%{transform:translate(0,-5px);opacity:0}25%{opacity:1}100%{transform:translate(3px,10px);opacity:0}}
+@keyframes flash{0%,60%,100%{opacity:1}65%{opacity:.2}70%{opacity:1}75%{opacity:.3}}
+@keyframes fog{to{transform:translateX(5px)}}
+
+/* ---------- calendar ---------- */
+.cal-week,.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal-week{margin-bottom:4px}
+.cal-week span{text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:4px 0}
+.cal-grid.slide-l{animation:slideL .4s var(--ease)}
+.cal-grid.slide-r{animation:slideR .4s var(--ease)}
+@keyframes slideL{from{opacity:0;transform:translateX(26px)}}
+@keyframes slideR{from{opacity:0;transform:translateX(-26px)}}
+.day{all:unset;box-sizing:border-box;cursor:pointer;position:relative;aspect-ratio:1;max-width:100%;display:grid;place-items:center;border-radius:14px;font-variant-numeric:tabular-nums;font-weight:500;transition:background .18s,transform .18s var(--ease)}
+.day:hover{background:var(--faint);transform:scale(1.06)}
+.day:focus-visible{outline:2px solid var(--accent)}
+.day.out{color:var(--muted);opacity:.45}
+.day.today span{display:grid;place-items:center;width:2.1em;height:2.1em;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:700;box-shadow:0 6px 16px -6px var(--accent)}
+.day.sel{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.day i{position:absolute;bottom:14%;width:5px;height:5px;border-radius:50%;background:var(--teal)}
+.day.today i{bottom:6%}
+.day-panel{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.day-panel h3{margin:0 0 10px;font-family:var(--font-display);font-size:16px;font-weight:600}
+.day-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.day-list li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--faint);animation:fadeUp .35s var(--ease)}
+.day-list .t{font-family:var(--font-mono);font-size:12px;color:var(--teal);min-width:52px}
+.day-list .txt{flex:1;min-width:0;overflow-wrap:anywhere}
+.x{all:unset;cursor:pointer;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;color:var(--muted);transition:background .15s,color .15s;flex:none}
+.x:hover{background:var(--accent-soft);color:var(--danger)}
+.x svg{width:14px;height:14px}
+#day-empty{margin:0}
+.ev-form{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+#ev-time{flex:0 0 auto;width:118px}
+#ev-text{flex:1 1 140px}
+
+/* ---------- notes ---------- */
+.note-form{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+#note-new{resize:none;min-height:64px;line-height:1.5}
+.note-form-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.note-form-row .hint{margin-left:auto}
+.swatches{display:flex;gap:6px}
+.sw{all:unset;cursor:pointer;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);transition:transform .18s var(--ease)}
+.sw:hover{transform:scale(1.15)}
+.sw[aria-pressed="true"]{border-color:var(--fg);transform:scale(1.12)}
+.sw:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.c1{background:var(--n1)}.c2{background:var(--n2)}.c3{background:var(--n3)}.c4{background:var(--n4)}
+.notes-list{columns:2 210px;column-gap:14px}
+.note{break-inside:avoid;margin-bottom:14px;border-radius:18px;padding:14px 14px 8px;color:var(--note-ink);box-shadow:0 10px 22px -14px rgba(20,30,50,.5);transform:rotate(var(--rot,0deg));transition:transform .35s var(--ease),box-shadow .35s,opacity .3s;animation:pop .5s cubic-bezier(.2,.9,.3,1.3) both}
+.note:hover,.note:focus-within{transform:rotate(0) translateY(-3px);box-shadow:0 16px 30px -14px rgba(20,30,50,.55)}
+.note textarea{all:unset;display:block;width:100%;white-space:pre-wrap;overflow-wrap:anywhere;resize:none;line-height:1.5;font-size:15px;overflow:hidden;min-height:1.5em}
+.note footer{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;opacity:.7}
+.note footer .x{margin-left:auto;color:inherit}
+.tag{font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding:1px 7px;border-radius:99px;border:1px solid currentColor;opacity:.8}
+.note.leaving{animation:leave .3s var(--ease) forwards}
+@keyframes pop{from{opacity:0;transform:scale(.85) rotate(-4deg)}}
+@keyframes leave{to{opacity:0;transform:scale(.85) rotate(4deg)}}
+.empty{margin:6px 0 0;padding:22px;border:1.5px dashed var(--line);border-radius:18px;color:var(--muted);text-align:center}
+
+/* ---------- ideas ---------- */
+.ideas-body{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px;min-height:340px}
+@media (max-width:760px){.ideas-body{grid-template-columns:1fr}}
+.idea-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:440px;overflow-y:auto}
+.idea-item{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;padding:12px 14px;border-radius:16px;border:1px solid transparent;transition:background .2s,border-color .2s,transform .2s var(--ease)}
+.idea-item:hover{background:var(--faint);transform:translateX(3px)}
+.idea-item.on{background:var(--glass-strong);border-color:var(--line);box-shadow:inset 3px 0 0 var(--accent)}
+.idea-item:focus-visible{outline:2px solid var(--accent)}
+.idea-item strong{display:block;font-family:var(--font-display);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idea-item span{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idea-item time{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+.editor{display:flex;flex-direction:column;min-width:0;background:var(--glass-strong);border:1px solid var(--line);border-radius:20px;padding:18px 20px 12px}
+.editor.swap{animation:fadeUp .35s var(--ease)}
+.idea-title{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;font-family:var(--font-display);font-weight:700;font-size:clamp(22px,2.6vw,30px);letter-spacing:-.02em;width:100%;resize:none;overflow:hidden;line-height:1.2;display:block}
+.idea-title::placeholder{color:var(--muted);opacity:.6}
+.idea-body{flex:1;min-height:220px;border:0!important;background:transparent!important;box-shadow:none!important;padding:10px 0!important;resize:vertical;font-size:16px;line-height:1.75;max-width:70ch}
+.editor-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
+.editor-foot .spacer{flex:1}
+.saved{color:var(--teal);font-weight:600;opacity:0;transition:opacity .3s}
+.saved.show{opacity:1}
+#idea-confirm{display:inline-flex;align-items:center;gap:8px;font-size:14px}
+#idea-confirm[hidden]{display:none!important}
+
+/* ---------- move data dialog ---------- */
+.dlg{width:min(520px,calc(100vw - 32px));max-height:calc(100dvh - 48px);overflow:auto;border:1px solid var(--line);border-radius:24px;padding:24px;background:var(--panel);color:var(--fg);box-shadow:0 30px 80px -20px rgba(0,0,0,.45)}
+.dlg::backdrop{background:rgba(10,15,30,.5)}
+.dlg[open]{animation:fadeUp .3s var(--ease)}
+.dlg h2{margin-bottom:6px}
+.dlg-close{position:absolute;top:14px;right:14px;margin:0}
+.step{margin-top:16px;padding:14px;border-radius:16px;background:var(--faint);display:flex;flex-direction:column;gap:10px}
+.step h3{margin:0;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:700}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.code{width:100%;font-family:var(--font-mono);font-size:12px;resize:vertical;word-break:break-all}
+label.btn{cursor:pointer;display:inline-block}
+#sync-msg:empty{display:none}
+#sync-msg{margin:0}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;z-index:20;background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:99px;font-weight:600;font-size:14px;transition:transform .35s var(--ease),opacity .35s;pointer-events:none}
+.toast.show{transform:translate(-50%,0);opacity:1}
+
+@media (max-width:480px){
+  .card{padding:18px;border-radius:22px}
+  .wx-now{grid-template-columns:auto 1fr}
+  .wx-hl{grid-column:1/-1;flex-direction:row;gap:14px;text-align:left}
+  .wx-icon svg{width:80px;height:80px}
+  .daily li{grid-template-columns:48px 26px 32px minmax(0,1fr) 32px;gap:8px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+
+<div class="sky" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="var(--accent)"/><path d="M6 20a10 10 0 0 1 20 0" fill="none" stroke="var(--accent-ink)" stroke-width="2.4" stroke-linecap="round"/><circle cx="16" cy="13" r="3.4" fill="var(--accent-ink)"/></svg>
+      Daybook
+    </div>
+    <div class="head-actions">
+    <button id="sync-btn" class="chip" type="button" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg>
+      <span>Move data</span>
+    </button>
+    <button id="motion-btn" class="chip" type="button" aria-pressed="true" title="Turn background animation on or off">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12c3-6 6 6 9 0s6 6 9 0"/></svg>
+      <span id="motion-label">Motion on</span>
+    </button>
+    <button id="theme-btn" class="chip" type="button" title="Switch light / dark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg>
+      <span id="theme-label">System</span>
+    </button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- HERO -->
+    <section class="card hero" style="--i:0" aria-label="Today">
+      <h1 class="greet"><span id="greet">Good day</span>,&nbsp;<input id="name-input" type="text" placeholder="your name" maxlength="24" autocomplete="off" spellcheck="false" aria-label="Your name"><span id="name-mirror" aria-hidden="true"></span></h1>
+      <p class="date-line" id="date-line">&nbsp;</p>
+      <button id="clock-btn" class="clock" type="button" title="Tap to switch 12 / 24-hour">
+        <span id="clock"></span>
+        <span class="clock-side"><span id="secs">00</span><span id="ampm" hidden>AM</span></span>
+      </button>
+      <div class="hero-meta">
+        <div class="dayprog">
+          <div class="dp-head"><span id="day-pct"></span><b id="day-left"></b></div>
+          <div id="day-bar" class="bar"><i></i></div>
+          <p id="doy" class="mono"></p>
+        </div>
+        <div id="sun-box" class="sunbox" hidden>
+          <svg viewBox="0 0 300 96" aria-hidden="true">
+            <line x1="0" x2="300" y1="82" y2="82" class="horizon"/>
+            <path id="arc-path" class="arc" d="M14 82 Q150 -38 286 82"/>
+            <path id="arc-done" class="arc-done" d="M14 82 Q150 -38 286 82"/>
+            <circle id="sun-dot" cx="14" cy="82" r="7"/>
+          </svg>
+          <div class="sun-times mono"><span>Sunrise <b id="sunrise">--</b></span><span>Sunset <b id="sunset">--</b></span></div>
+          <p id="sun-note"></p>
+        </div>
+      </div>
+      <div class="summary" id="summary"></div>
+    </section>
+
+    <!-- WEATHER -->
+    <section class="card weather" style="--i:1" aria-labelledby="wx-h">
+      <div class="card-head">
+        <h2 id="wx-h">Weather</h2>
+        <div class="head-actions">
+          <button id="wx-place-btn" class="chip" type="button" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+            <span id="wx-place">Set location</span>
+          </button>
+          <button id="unit-btn" class="chip mono" type="button" title="Switch °C / °F">°C</button>
+        </div>
+      </div>
+      <div id="wx-search" class="wx-search" hidden>
+        <p id="wx-search-msg" class="muted" style="margin:0">Where are you? Use your location or search for a city.</p>
+        <div class="search-row">
+          <input id="city-input" type="search" placeholder="Search a city, e.g. Lisbon" autocomplete="off" aria-label="Search a city">
+          <button id="locate-btn" class="btn accent" type="button">Use my location</button>
+        </div>
+        <ul id="city-results" class="results"></ul>
+      </div>
+      <div id="wx-loading" hidden><div class="skel" style="width:60%;height:60px"></div><div class="skel"></div><div class="skel" style="width:80%"></div><div class="skel" style="width:70%"></div></div>
+      <div id="wx-error" class="wx-error" hidden>
+        <p id="wx-error-msg">Couldn't load the weather. Check your internet connection, then try again.</p>
+        <a id="wx-site-link" class="btn accent" href="https://goodlaith01.github.io/gg/" target="_blank" rel="noopener" hidden>Open my Daybook website</a>
+        <button id="wx-retry" class="btn" type="button">Try again</button>
+      </div>
+      <div id="wx-body" hidden>
+        <div class="wx-now">
+          <div id="wx-icon" class="wx-icon"></div>
+          <div>
+            <div class="wx-temp"><span id="wx-temp">--</span><sup>°</sup></div>
+            <div id="wx-cond" class="wx-cond"></div>
+            <div id="wx-feels" class="muted small"></div>
+          </div>
+          <div class="wx-hl mono"><span id="wx-hi"></span><span id="wx-lo"></span></div>
+        </div>
+        <div class="wx-stats">
+          <div class="stat"><span>Humidity</span><b id="wx-hum">--</b></div>
+          <div class="stat"><span>Wind</span><b id="wx-wind">--</b></div>
+          <div class="stat"><span>Rain</span><b id="wx-rain">--</b></div>
+        </div>
+        <div class="hourly" id="wx-hourly" aria-label="Next 12 hours"></div>
+        <ul class="daily" id="wx-daily" aria-label="Next days"></ul>
+        <p class="muted small" id="wx-updated"></p>
+      </div>
+    </section>
+
+    <!-- CALENDAR -->
+    <section class="card calendar" style="--i:2" aria-labelledby="cal-title">
+      <div class="card-head">
+        <h2 id="cal-title">Calendar</h2>
+        <div class="head-actions">
+          <button id="cal-prev" class="icon-btn" type="button" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
+          <button id="cal-today" class="chip" type="button">Today</button>
+          <button id="cal-next" class="icon-btn" type="button" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+        </div>
+      </div>
+      <div class="cal-week" id="cal-week"></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="day-panel">
+        <h3 id="day-title"></h3>
+        <ul id="day-list" class="day-list"></ul>
+        <p id="day-empty" class="muted small">Nothing planned yet. Add something below.</p>
+        <form id="ev-form" class="ev-form" autocomplete="off">
+          <input id="ev-time" type="time" aria-label="Time (optional)">
+          <input id="ev-text" type="text" placeholder="Add a plan for this day" maxlength="120" aria-label="Plan">
+          <button class="btn accent" type="submit">Add</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- NOTES -->
+    <section class="card notes" style="--i:3" aria-labelledby="notes-h">
+      <div class="card-head"><h2 id="notes-h">Notes <span id="notes-count" class="count mono">0</span></h2></div>
+      <form id="note-form" class="note-form">
+        <textarea id="note-new" rows="2" placeholder="Write a quick note…" aria-label="New note"></textarea>
+        <div class="note-form-row">
+          <div class="swatches" role="group" aria-label="Note color">
+            <button type="button" class="sw c1" data-c="1" aria-label="Yellow" aria-pressed="true"></button>
+            <button type="button" class="sw c2" data-c="2" aria-label="Pink" aria-pressed="false"></button>
+            <button type="button" class="sw c3" data-c="3" aria-label="Green" aria-pressed="false"></button>
+            <button type="button" class="sw c4" data-c="4" aria-label="Blue" aria-pressed="false"></button>
+          </div>
+          <span class="hint muted small">Ctrl + Enter to add</span>
+          <button class="btn accent" type="submit">Add note</button>
+        </div>
+      </form>
+      <div id="notes-list" class="notes-list"></div>
+      <p id="notes-empty" class="empty" hidden>No notes yet. Write your first one in the box above.</p>
+    </section>
+
+    <!-- IDEAS -->
+    <section class="card ideas" style="--i:4" aria-labelledby="ideas-h">
+      <div class="card-head">
+        <h2 id="ideas-h">Ideas <span id="ideas-count" class="count mono">0</span></h2>
+        <button id="idea-new" class="btn accent" type="button">+ New idea</button>
+      </div>
+      <div class="ideas-body">
+        <ul id="idea-list" class="idea-list"></ul>
+        <div class="editor" id="idea-editor">
+          <textarea id="idea-title" class="idea-title" rows="1" placeholder="Give it a name" maxlength="90" aria-label="Idea title"></textarea>
+          <textarea id="idea-body" class="idea-body" placeholder="Write anything. It saves as you type." aria-label="Idea"></textarea>
+          <div class="editor-foot">
+            <span id="idea-words" class="mono small muted"></span>
+            <span id="idea-status" class="saved small">Saved</span>
+            <span class="spacer"></span>
+            <span id="idea-confirm" hidden>Delete this idea?
+              <button id="idea-yes" class="btn danger" type="button">Delete</button>
+              <button id="idea-no" class="btn" type="button">Keep it</button>
+            </span>
+            <button id="idea-del" class="btn ghost" type="button">Delete</button>
+          </div>
+        </div>
+        <div id="idea-empty" class="empty" hidden>No ideas yet. Press “New idea” to start writing.</div>
+      </div>
+    </section>
+  </main>
+</div>
+<dialog id="sync-dlg" class="dlg" aria-labelledby="sync-h">
+  <form method="dialog" class="dlg-close"><button class="x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></form>
+  <h2 id="sync-h">Move your data</h2>
+  <p class="muted small">Notes, plans and ideas are saved on each device. To bring them to your phone or laptop, copy them here and paste them there.</p>
+  <div class="step">
+    <h3><span class="num">1</span> On this device</h3>
+    <div class="row">
+      <button id="sync-copy" class="btn accent" type="button">Copy my data</button>
+      <button id="sync-save" class="btn" type="button">Save backup file</button>
+    </div>
+    <textarea id="sync-out" class="code" rows="3" readonly hidden aria-label="Your data code"></textarea>
+  </div>
+  <div class="step">
+    <h3><span class="num">2</span> On your other device</h3>
+    <textarea id="sync-in" class="code" rows="3" placeholder="Paste the code here" aria-label="Paste data code"></textarea>
+    <div class="row">
+      <button id="sync-load" class="btn accent" type="button">Add to this device</button>
+      <label class="btn" for="sync-file">Load backup file</label>
+      <input id="sync-file" type="file" accept=".json,application/json,text/plain" hidden>
+    </div>
+    <p id="sync-msg" class="small muted" role="status"></p>
+  </div>
+  <p class="small muted">Adding keeps everything already here and keeps the newest version of each note and idea. Deleting something on one device doesn't delete it on the other.</p>
+</dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+  // ---------- helpers ----------
+  const K = "daybook:";
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(K + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(K + k, JSON.stringify(v)); } catch (e) {} },
+  };
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const pad = (n) => String(n).padStart(2, "0");
+  const dkey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+  function rel(at) {
+    const s = (at - Date.now()) / 1000;
+    if (Math.abs(s) < 60) return "just now";
+    if (Math.abs(s) < 3600) return rtf.format(Math.round(s / 60), "minute");
+    if (Math.abs(s) < 86400) return rtf.format(Math.round(s / 3600), "hour");
+    if (Math.abs(s) < 604800) return rtf.format(Math.round(s / 86400), "day");
+    return new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  function toast(msg) {
+    const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+  const X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+
+  // ---------- theme ----------
+  const root = document.documentElement;
+  const hostTheme = root.getAttribute("data-theme");
+  let theme = store.get("theme", "system");
+  const isDark = () => root.getAttribute("data-theme") === "dark" ||
+    (!root.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+  function applyTheme() {
+    if (theme === "system") { hostTheme ? root.setAttribute("data-theme", hostTheme) : root.removeAttribute("data-theme"); }
+    else root.setAttribute("data-theme", theme);
+    $("#theme-label").textContent = theme[0].toUpperCase() + theme.slice(1);
+  }
+  $("#theme-btn").addEventListener("click", () => {
+    theme = theme === "system" ? (isDark() ? "light" : "dark") : theme === "light" ? "dark" : "system";
+    store.set("theme", theme); applyTheme(); fx.refresh();
+  });
+  if (theme !== "system") applyTheme();
+
+  // ---------- name ----------
+  const nameIn = $("#name-input"), mirror = $("#name-mirror");
+  function sizeName() { mirror.textContent = nameIn.value || nameIn.placeholder; nameIn.style.width = mirror.offsetWidth + 8 + "px"; }
+  nameIn.value = store.get("name", "");
+  nameIn.addEventListener("input", () => { store.set("name", nameIn.value.trim()); sizeName(); });
+  nameIn.addEventListener("keydown", (e) => { if (e.key === "Enter") nameIn.blur(); });
+
+  // ---------- weather icons ----------
+  const CLOUD = "M18 47a10 10 0 0 1 0-20 14 14 0 0 1 27-4 12.5 12.5 0 0 1 3 24z";
+  const svg = (inner) => `<svg viewBox="0 0 64 64" aria-hidden="true">${inner}</svg>`;
+  const SUN = `<g class="i-sun"><g class="rays" stroke="var(--sun)" stroke-width="3" stroke-linecap="round">${[0, 45, 90, 135, 180, 225, 270, 315].map((a) => `<line x1="32" y1="8" x2="32" y2="13" transform="rotate(${a} 32 32)"/>`).join("")}</g><circle cx="32" cy="32" r="11" fill="var(--sun)"/></g>`;
+  const MOON = `<path class="i-moon" d="M38 13a19 19 0 1 0 14 31A16 16 0 0 1 38 13z" fill="var(--sun)"/>`;
+  const cloud = (cls = "") => `<path class="i-cloud ${cls}" d="${CLOUD}" fill="var(--cloud)" stroke="var(--cloud-edge)" stroke-width="1.5" stroke-linejoin="round"/>`;
+  function wxIcon(kind, night) {
+    const up = (s) => `<g transform="translate(0 -6)">${s}</g>`;
+    switch (kind) {
+      case "clear": return svg(night ? MOON : SUN);
+      case "partly": return svg(`<g transform="translate(-9 -10) scale(.82)">${night ? MOON : SUN}</g>${cloud()}`);
+      case "cloud": return svg(`<g opacity=".6" transform="translate(-9 -9) scale(.8)">${cloud("back")}</g>${cloud()}`);
+      case "fog": return svg(up(cloud()) + `<g stroke="var(--cloud-edge)" stroke-width="3" stroke-linecap="round"><line class="fogline" x1="14" y1="49" x2="44" y2="49"/><line class="fogline" style="animation-delay:-2s" x1="22" y1="56" x2="52" y2="56"/></g>`);
+      case "rain": return svg(up(cloud()) + `<g stroke="var(--rain)" stroke-width="3" stroke-linecap="round">${[22, 32, 42].map((x, i) => `<line class="drop" style="animation-delay:${i * -0.37}s" x1="${x}" y1="47" x2="${x - 2}" y2="53"/>`).join("")}</g>`);
+      case "snow": return svg(up(cloud()) + `<g fill="var(--snow)">${[22, 32, 42].map((x, i) => `<circle class="flake" style="animation-delay:${i * -0.85}s" cx="${x}" cy="51" r="2.6"/>`).join("")}</g>`);
+      case "storm": return svg(up(cloud()) + `<path class="bolt" d="M34 41l-8 11h6l-3 9 10-13h-6l3-7z" fill="var(--bolt)"/>`);
+      default: return svg(cloud());
+    }
+  }
+  function wxInfo(c) {
+    if (c === 0) return ["clear", "Clear sky"];
+    if (c === 1) return ["partly", "Mostly clear"];
+    if (c === 2) return ["partly", "Partly cloudy"];
+    if (c === 3) return ["cloud", "Overcast"];
+    if (c === 45 || c === 48) return ["fog", "Foggy"];
+    if (c >= 51 && c <= 57) return ["rain", "Drizzle"];
+    if (c === 61) return ["rain", "Light rain"];
+    if (c === 63) return ["rain", "Rain"];
+    if (c >= 64 && c <= 67) return ["rain", "Heavy rain"];
+    if (c >= 71 && c <= 77) return ["snow", "Snow"];
+    if (c >= 80 && c <= 82) return ["rain", "Rain showers"];
+    if (c === 85 || c === 86) return ["snow", "Snow showers"];
+    if (c >= 95) return ["storm", "Thunderstorm"];
+    return ["cloud", "Cloudy"];
+  }
+
+  // ---------- motion ----------
+  let motion = store.get("motion", !reduceMotion);
+  function applyMotion() {
+    document.body.classList.toggle("calm", !motion);
+    $("#motion-btn").setAttribute("aria-pressed", String(motion));
+    $("#motion-label").textContent = motion ? "Motion on" : "Motion off";
+  }
+  $("#motion-btn").addEventListener("click", () => {
+    motion = !motion; store.set("motion", motion); applyMotion(); fx.refresh();
+    toast(motion ? "Animations on" : "Animations off");
+  });
+  applyMotion();
+
+  // ---------- ambient particles (rain, snow, stars) ----------
+  // Kept cheap: 1x pixel ratio, ~30 fps, few particles, stops when the tab is hidden.
+  const fx = (() => {
+    const cv = $("#fx"), ctx = cv.getContext("2d", { alpha: true });
+    let mode = "none", want = "none", parts = [], w = 0, h = 0, raf = 0, last = 0, rgb = "255,255,255";
+    function size() { w = innerWidth; h = innerHeight; cv.width = w; cv.height = h; }
+    function build() {
+      const area = w * h;
+      const n = mode === "rain" ? Math.min(140, Math.round(w / 10)) : mode === "snow" ? Math.min(90, Math.round(w / 16)) : mode === "stars" ? Math.min(120, Math.round(area / 12000)) : 0;
+      parts = Array.from({ length: n }, () => ({ x: Math.random() * w, y: Math.random() * h * (mode === "stars" ? 0.7 : 1), v: Math.random(), p: Math.random() * 6.28 }));
+    }
+    function draw(t) {
+      ctx.clearRect(0, 0, w, h);
+      if (mode === "rain") {
+        ctx.strokeStyle = `rgba(${rgb},.32)`; ctx.lineWidth = 1.2; ctx.beginPath();
+        for (const q of parts) {
+          ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - 3, q.y + 12 + q.v * 10);
+          q.y += 16 + q.v * 14; q.x -= 2.4;
+          if (q.y > h) { q.y = -24; q.x = Math.random() * (w + 80); }
+        }
+        ctx.stroke();
+      } else if (mode === "snow") {
+        ctx.fillStyle = `rgba(${rgb},.75)`; ctx.beginPath();
+        for (const q of parts) {
+          const r = 1 + q.v * 2.2; ctx.moveTo(q.x + r, q.y); ctx.arc(q.x, q.y, r, 0, 6.29);
+          q.y += 1 + q.v * 1.8; q.x += Math.sin(t / 1100 + q.p) * 0.8;
+          if (q.y > h + 5) { q.y = -5; q.x = Math.random() * w; }
+        }
+        ctx.fill();
+      } else if (mode === "stars") {
+        for (const q of parts) {
+          const a = (0.25 + 0.75 * Math.abs(Math.sin(t / 1600 + q.p * 3))) * (0.4 + q.v * 0.6);
+          ctx.fillStyle = `rgba(${rgb},${a.toFixed(2)})`;
+          const r = 0.7 + q.v * 1.1; ctx.fillRect(q.x - r / 2, q.y - r / 2, r, r);
+        }
+      }
+    }
+    function loop(t) {
+      raf = requestAnimationFrame(loop);
+      if (t - last < 33) return; // ~30 fps is plenty for ambience
+      last = t; draw(t);
+    }
+    function refresh() {
+      cancelAnimationFrame(raf); raf = 0;
+      rgb = getComputedStyle(root).getPropertyValue("--fx").trim() || "255,255,255";
+      mode = !motion || (want === "stars" && !isDark()) ? "none" : want;
+      size(); build(); ctx.clearRect(0, 0, w, h);
+      if (mode === "none" || document.hidden) return;
+      if (reduceMotion) { if (mode === "stars") draw(0); return; }
+      raf = requestAnimationFrame(loop);
+    }
+    let lastW = innerWidth;
+    // phones fire resize when the address bar slides; only rebuild on real width changes
+    addEventListener("resize", debounce(() => { if (innerWidth !== lastW) { lastW = innerWidth; refresh(); } else { h = innerHeight; cv.height = h; } }, 250));
+    document.addEventListener("visibilitychange", refresh);
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => refresh());
+    return { set(m) { if (m !== want) { want = m; refresh(); } }, refresh };
+  })();
+
+  // ---------- weather ----------
+  let loc = store.get("loc", null);
+  let unit = store.get("unit", "c");
+  let wx = store.get("wx", null);
+  const T = (c) => Math.round(unit === "f" ? (c * 9) / 5 + 32 : c);
+  const locKey = () => (loc ? `${loc.lat},${loc.lon}` : "");
+  const hm = (iso) => {
+    const h = +iso.slice(11, 13), m = iso.slice(14, 16);
+    return h12 ? `${h % 12 || 12}:${m} ${h < 12 ? "AM" : "PM"}` : `${pad(h)}:${m}`;
+  };
+  const hourLabel = (iso) => { const h = +iso.slice(11, 13); return h12 ? `${h % 12 || 12} ${h < 12 ? "AM" : "PM"}` : `${pad(h)}:00`; };
+
+  const SITE = "https://goodlaith01.github.io/gg/";
+  const onSite = location.protocol === "https:" && /github\.io$/.test(location.hostname) || location.protocol === "file:" || location.hostname === "localhost";
+  if (!onSite) {
+    $("#wx-site-link").hidden = false;
+    $("#wx-error-msg").textContent = "This preview can't reach the weather service. Live weather and your location work on your Daybook website.";
+  }
+  function showWx(state) {
+    $("#wx-loading").hidden = state !== "loading";
+    $("#wx-error").hidden = state !== "error";
+    $("#wx-body").hidden = state !== "body";
+    if (state === "empty") openSearch(true);
+  }
+  function openSearch(open) {
+    const p = $("#wx-search"); p.hidden = !open;
+    $("#wx-place-btn").setAttribute("aria-expanded", String(open));
+    if (open) { $("#city-results").innerHTML = ""; $("#wx-search-msg").textContent = loc ? "Change your location:" : "Where are you? Use your location or search for a city."; }
+  }
+  $("#wx-place-btn").addEventListener("click", () => {
+    const open = $("#wx-search").hidden; openSearch(open);
+    if (open) $("#city-input").focus();
+  });
+  $("#unit-btn").addEventListener("click", () => { unit = unit === "c" ? "f" : "c"; store.set("unit", unit); $("#unit-btn").textContent = unit === "c" ? "°C" : "°F"; if (wx && wx.key === locKey()) renderWx(); });
+  $("#unit-btn").textContent = unit === "c" ? "°C" : "°F";
+  $("#wx-retry").addEventListener("click", () => loadWeather(true));
+
+  async function getJSON(url) { const r = await fetch(url); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }
+
+  async function loadWeather(force) {
+    if (!loc) { showWx("empty"); return; }
+    $("#wx-place").textContent = loc.name;
+    const have = wx && wx.key === locKey();
+    if (have) renderWx(); else showWx("loading");
+    if (have && !force && Date.now() - wx.at < 20 * 60e3) return;
+    try {
+      const u = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
+        "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,is_day" +
+        "&hourly=temperature_2m,weather_code,precipitation_probability,is_day" +
+        "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max" +
+        "&timezone=auto&forecast_days=6";
+      const d = await getJSON(u);
+      wx = { key: locKey(), at: Date.now(), d }; store.set("wx", wx); renderWx();
+    } catch (e) {
+      if (have) toast("Couldn't refresh the weather"); else showWx("error");
+    }
+  }
+
+  function renderWx() {
+    const d = wx.d, c = d.current;
+    const [kind, label] = wxInfo(c.weather_code);
+    const night = !c.is_day;
+    showWx("body");
+    $("#wx-icon").innerHTML = wxIcon(kind, night);
+    $("#wx-temp").textContent = T(c.temperature_2m);
+    $("#wx-cond").textContent = label;
+    $("#wx-feels").textContent = `Feels like ${T(c.apparent_temperature)}°`;
+    $("#wx-hi").textContent = `H ${T(d.daily.temperature_2m_max[0])}°`;
+    $("#wx-lo").textContent = `L ${T(d.daily.temperature_2m_min[0])}°`;
+    $("#wx-hum").textContent = `${c.relative_humidity_2m}%`;
+    $("#wx-wind").textContent = unit === "f" ? `${Math.round(c.wind_speed_10m * 0.621)} mph` : `${Math.round(c.wind_speed_10m)} km/h`;
+    $("#wx-rain").textContent = `${d.daily.precipitation_probability_max?.[0] ?? 0}%`;
+
+    // hourly: from the location's current hour
+    const nowIso = c.time.slice(0, 13) + ":00";
+    let i0 = d.hourly.time.indexOf(nowIso); if (i0 < 0) i0 = 0;
+    let hh = "";
+    for (let k = 0; k < 12 && i0 + k < d.hourly.time.length; k++) {
+      const i = i0 + k, [hk] = wxInfo(d.hourly.weather_code[i]), pr = d.hourly.precipitation_probability[i];
+      hh += `<div class="hr${k === 0 ? " now" : ""}" style="--k:${k}"><span>${k === 0 ? "Now" : hourLabel(d.hourly.time[i])}</span>${wxIcon(hk, !d.hourly.is_day[i])}<b>${T(d.hourly.temperature_2m[i])}°</b><em>${pr >= 20 ? pr + "%" : ""}</em></div>`;
+    }
+    $("#wx-hourly").innerHTML = hh;
+
+    // daily with week-relative range bars
+    const mins = d.daily.temperature_2m_min, maxs = d.daily.temperature_2m_max;
+    const lo = Math.min(...mins), hi = Math.max(...maxs), span = Math.max(1, hi - lo);
+    $("#wx-daily").innerHTML = d.daily.time.map((day, k) => {
+      const [dk] = wxInfo(d.daily.weather_code[k]);
+      const name = k === 0 ? "Today" : new Date(day + "T12:00").toLocaleDateString(undefined, { weekday: "short" });
+      const l = ((mins[k] - lo) / span) * 100, wdt = ((maxs[k] - mins[k]) / span) * 100;
+      return `<li style="--k:${k}"><span>${name}</span>${wxIcon(dk, false)}<span class="lo">${T(mins[k])}°</span><div class="range"><i style="left:${l}%;width:${Math.max(wdt, 4)}%"></i></div><span class="hi">${T(maxs[k])}°</span></li>`;
+    }).join("");
+    $("#wx-updated").textContent = `Updated ${rel(wx.at)} · Data from Open-Meteo`;
+
+    fx.set(kind === "rain" || kind === "storm" ? "rain" : kind === "snow" ? "snow" : night && (kind === "clear" || kind === "partly") ? "stars" : "none");
+    sunArc();
+  }
+
+  // city search
+  const runSearch = debounce(async (q) => {
+    const ul = $("#city-results");
+    if (q.length < 2) { ul.innerHTML = ""; return; }
+    try {
+      const r = await getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&format=json`);
+      const res = r.results || [];
+      ul.innerHTML = res.length ? res.map((p, i) => `<li><button type="button" data-i="${i}"><span>${esc(p.name)}</span><small>${esc([p.admin1, p.country].filter(Boolean).join(", "))}</small></button></li>`).join("")
+        : `<li class="muted small" style="padding:6px 12px">No places match “${esc(q)}”. Try the city name only.</li>`;
+      ul.onclick = (e) => {
+        const b = e.target.closest("button[data-i]"); if (!b) return;
+        const p = res[+b.dataset.i];
+        setLoc({ name: p.name, lat: +p.latitude.toFixed(3), lon: +p.longitude.toFixed(3) });
+      };
+    } catch (e) {
+      ul.innerHTML = onSite ? `<li class="muted small" style="padding:6px 12px">City search isn't reachable right now. Check your connection.</li>`
+        : `<li class="muted small" style="padding:6px 12px">City search works on your website: <a href="${SITE}" target="_blank" rel="noopener">${SITE.replace("https://", "")}</a></li>`;
+    }
+  }, 320);
+  $("#city-input").addEventListener("input", (e) => runSearch(e.target.value.trim()));
+  $("#city-input").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const first = $("#city-results button[data-i]"); if (first) first.click();
+  });
+
+  function setLoc(l) {
+    loc = l; store.set("loc", loc); openSearch(false); $("#city-input").value = "";
+    toast(`Weather set to ${loc.name}`); loadWeather(true);
+  }
+  $("#locate-btn").addEventListener("click", () => {
+    const msg = $("#wx-search-msg");
+    if (!navigator.geolocation || !window.isSecureContext) { msg.textContent = onSite ? "This browser can't share your location. Search for your city instead." : "Location only works on your Daybook website. Search for your city, or open the website."; return; }
+    msg.textContent = "Finding you…";
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = +pos.coords.latitude.toFixed(3), lon = +pos.coords.longitude.toFixed(3);
+      let name = "My location";
+      try {
+        const r = await getJSON(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+        name = r.city || r.locality || r.principalSubdivision || name;
+      } catch (e) {}
+      setLoc({ name, lat, lon });
+    }, (err) => {
+      msg.textContent = err && err.code === 1
+        ? "Location permission is off. Allow location for this site in your browser settings, or search for your city below."
+        : "Couldn't find your location just now. Try again, or search for your city below.";
+    }, { timeout: 15000, maximumAge: 600000, enableHighAccuracy: false });
+  });
+
+  // ---------- sun arc ----------
+  const arcPath = $("#arc-path"), arcDone = $("#arc-done"), sunDot = $("#sun-dot");
+  const arcLen = arcPath.getTotalLength ? arcPath.getTotalLength() : 320;
+  arcDone.style.strokeDasharray = arcLen;
+  function sunArc() {
+    if (!wx || !loc || wx.key !== locKey()) { $("#sun-box").hidden = true; return; }
+    const d = wx.d, off = d.utc_offset_seconds || 0;
+    const local = new Date(Date.now() + off * 1000);
+    const nowM = local.getUTCHours() * 60 + local.getUTCMinutes();
+    const toM = (iso) => +iso.slice(11, 13) * 60 + +iso.slice(14, 16);
+    const rise = toM(d.daily.sunrise[0]), set = toM(d.daily.sunset[0]);
+    $("#sun-box").hidden = false;
+    $("#sunrise").textContent = hm(d.daily.sunrise[0]);
+    $("#sunset").textContent = hm(d.daily.sunset[0]);
+    const t = Math.min(1, Math.max(0, (nowM - rise) / (set - rise)));
+    const p = arcPath.getPointAtLength(t * arcLen);
+    sunDot.setAttribute("cx", p.x); sunDot.setAttribute("cy", p.y);
+    sunDot.style.opacity = nowM < rise || nowM > set ? 0.35 : 1;
+    arcDone.style.strokeDashoffset = arcLen * (1 - t);
+    const fmt = (m) => `${Math.floor(m / 60)}h ${m % 60}m`;
+    $("#sun-note").textContent = nowM < rise ? `Sunrise in ${fmt(rise - nowM)}` : nowM < set ? `${fmt(set - nowM)} of daylight left` : "The sun has set";
+  }
+
+  // ---------- clock ----------
+  let h12 = store.get("h12", false);
+  const clockEl = $("#clock");
+  function setClock(str) {
+    if (clockEl.children.length !== str.length) {
+      clockEl.innerHTML = [...str].map((c) => `<span class="dg${c === ":" ? " colon" : ""}">${c}</span>`).join("");
+      return;
+    }
+    [...str].forEach((c, i) => {
+      const s = clockEl.children[i];
+      if (s.textContent !== c) { s.textContent = c; s.classList.remove("roll"); void s.offsetWidth; s.classList.add("roll"); }
+    });
+  }
+  function isoWeek(d) {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
+    return Math.ceil(((t - new Date(Date.UTC(t.getUTCFullYear(), 0, 1))) / 864e5 + 1) / 7);
+  }
+  let lastDay = dkey(new Date()), lastMin = -1;
+  function tick() {
+    const n = new Date(), hr = n.getHours();
+    let h = hr;
+    if (h12) h = h % 12 || 12;
+    setClock(`${h12 ? h : pad(h)}:${pad(n.getMinutes())}`);
+    $("#secs").textContent = pad(n.getSeconds());
+    $("#ampm").hidden = !h12; $("#ampm").textContent = hr < 12 ? "AM" : "PM";
+    if (n.getMinutes() === lastMin) return;
+    lastMin = n.getMinutes();
+    $("#greet").textContent = hr < 5 ? "Good night" : hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : hr < 21 ? "Good evening" : "Good night";
+    $("#date-line").textContent = n.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    const mins = hr * 60 + n.getMinutes(), left = 1440 - mins;
+    $("#day-bar").style.setProperty("--p", mins / 1440);
+    $("#day-pct").textContent = `${Math.round((mins / 1440) * 100)}% of today gone`;
+    $("#day-left").textContent = `${Math.floor(left / 60)}h ${left % 60}m left`;
+    const doy = Math.round((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - new Date(n.getFullYear(), 0, 0)) / 864e5);
+    const leap = new Date(n.getFullYear(), 1, 29).getDate() === 29;
+    $("#doy").textContent = `Day ${doy} of ${leap ? 366 : 365} · Week ${isoWeek(n)}`;
+    if (!wx || !loc) fx.set(hr < 6 || hr >= 19 ? "stars" : "none");
+    if (dkey(n) !== lastDay) { lastDay = dkey(n); cal.goToday(); }
+    sunArc();
+  }
+  $("#clock-btn").addEventListener("click", () => {
+    h12 = !h12; store.set("h12", h12); lastMin = -1; clockEl.innerHTML = ""; tick();
+    if (wx && wx.key === locKey()) renderWx();
+    toast(h12 ? "12-hour clock" : "24-hour clock");
+  });
+
+  // ---------- summary ----------
+  function summary() {
+    const ev = (store.get("events", {})[dkey(new Date())] || []).length;
+    const n = store.get("notes", []).length, i = store.get("ideas", []).length;
+    const pill = (num, one, many) => `<span class="pill"><b>${num}</b>${num === 1 ? one : many}</span>`;
+    $("#summary").innerHTML = pill(ev, "plan today", "plans today") + pill(n, "note", "notes") + pill(i, "idea", "ideas");
+  }
+
+  // ---------- calendar ----------
+  const cal = (() => {
+    let events = store.get("events", null);
+    if (!events) {
+      const t = new Date(), tm = new Date(t.getFullYear(), t.getMonth(), t.getDate() + 2);
+      events = { [dkey(t)]: [{ id: uid(), time: "18:30", text: "Example: evening walk" }], [dkey(tm)]: [{ id: uid(), time: "", text: "Example: call the dentist" }] };
+      store.set("events", events);
+    }
+    const view = new Date(); view.setDate(1);
+    let sel = dkey(new Date());
+    const wk = $("#cal-week");
+    wk.innerHTML = Array.from({ length: 7 }, (_, i) => `<span>${new Date(2023, 0, 1 + i).toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2)}</span>`).join("");
+    const save = () => { store.set("events", events); summary(); };
+
+    function render(dir) {
+      const y = view.getFullYear(), m = view.getMonth(), grid = $("#cal-grid");
+      $("#cal-title").textContent = view.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      const start = new Date(y, m, 1 - new Date(y, m, 1).getDay()), today = dkey(new Date());
+      let html = "";
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i), k = dkey(d), n = (events[k] || []).length;
+        const cls = ["day", d.getMonth() !== m && "out", k === today && "today", k === sel && "sel"].filter(Boolean).join(" ");
+        html += `<button type="button" class="${cls}" data-k="${k}" aria-pressed="${k === sel}" aria-label="${d.toDateString()}${n ? `, ${n} plan${n > 1 ? "s" : ""}` : ""}"><span>${d.getDate()}</span>${n ? "<i></i>" : ""}</button>`;
+      }
+      grid.innerHTML = html;
+      if (dir && !reduceMotion) { grid.classList.remove("slide-l", "slide-r"); void grid.offsetWidth; grid.classList.add(dir > 0 ? "slide-l" : "slide-r"); }
+      renderDay();
+    }
+    function renderDay() {
+      const [y, mo, da] = sel.split("-").map(Number), d = new Date(y, mo - 1, da);
+      const isToday = sel === dkey(new Date());
+      $("#day-title").textContent = (isToday ? "Today · " : "") + d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+      const list = (events[sel] || []).slice().sort((a, b) => (a.time || "00:00").localeCompare(b.time || "00:00"));
+      $("#day-list").innerHTML = list.map((e) => `<li data-id="${e.id}"><span class="t">${e.time ? hmLocal(e.time) : "All day"}</span><span class="txt">${esc(e.text)}</span><button type="button" class="x" aria-label="Remove plan">${X_ICON}</button></li>`).join("");
+      $("#day-empty").hidden = list.length > 0;
+    }
+    const hmLocal = (t) => { const [h, m] = t.split(":").map(Number); return h12 ? `${h % 12 || 12}:${pad(m)} ${h < 12 ? "AM" : "PM"}` : t; };
+
+    $("#cal-grid").addEventListener("click", (e) => {
+      const b = e.target.closest(".day"); if (!b) return;
+      sel = b.dataset.k;
+      const [y, m] = sel.split("-").map(Number);
+      if (y !== view.getFullYear() || m - 1 !== view.getMonth()) {
+        const dir = (y * 12 + m - 1) > (view.getFullYear() * 12 + view.getMonth()) ? 1 : -1;
+        view.setFullYear(y, m - 1, 1); render(dir);
+      } else render(0);
+      $("#ev-text").focus({ preventScroll: true });
+    });
+    $("#cal-prev").addEventListener("click", () => { view.setMonth(view.getMonth() - 1); render(-1); });
+    $("#cal-next").addEventListener("click", () => { view.setMonth(view.getMonth() + 1); render(1); });
+    function goToday() {
+      const t = new Date(), dir = Math.sign((t.getFullYear() * 12 + t.getMonth()) - (view.getFullYear() * 12 + view.getMonth()));
+      sel = dkey(t); view.setFullYear(t.getFullYear(), t.getMonth(), 1); render(dir); summary();
+    }
+    $("#cal-today").addEventListener("click", goToday);
+    $("#ev-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = $("#ev-text").value.trim(); if (!text) { $("#ev-text").focus(); return; }
+      (events[sel] = events[sel] || []).push({ id: uid(), time: $("#ev-time").value, text });
+      $("#ev-text").value = ""; $("#ev-time").value = ""; save(); render(0); toast("Plan added");
+    });
+    $("#day-list").addEventListener("click", (e) => {
+      const b = e.target.closest(".x"); if (!b) return;
+      const id = b.closest("li").dataset.id;
+      events[sel] = (events[sel] || []).filter((x) => x.id !== id);
+      if (!events[sel].length) delete events[sel];
+      save(); render(0); toast("Plan removed");
+    });
+    return { render, goToday };
+  })();
+
+  // ---------- notes ----------
+  (() => {
+    let list = store.get("notes", null);
+    if (!list) {
+      list = [
+        { id: uid(), text: "Example note: click any note to edit it. Changes save by themselves.", color: 1, at: Date.now() - 6e5, ex: true },
+        { id: uid(), text: "Example: oat milk, call Mom, return the library books", color: 3, at: Date.now() - 36e5 * 5, ex: true },
+      ];
+      store.set("notes", list);
+    }
+    let color = 1;
+    const box = $("#notes-list");
+    const save = () => { store.set("notes", list); summary(); $("#notes-count").textContent = list.length; $("#notes-empty").hidden = list.length > 0; };
+    const grow = (ta) => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
+    const rot = (id) => { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) | 0; return ((Math.abs(h) % 7) - 3) * 0.35; };
+    const noteHTML = (n) => `<article class="note c${n.color}" data-id="${n.id}" style="--rot:${rot(n.id)}deg"><textarea id="note-${n.id}" rows="1" aria-label="Note">${esc(n.text)}</textarea><footer><time>${rel(n.at)}</time>${n.ex ? '<span class="tag">Example</span>' : ""}<button type="button" class="x" aria-label="Delete note">${X_ICON}</button></footer></article>`;
+    function render() { box.innerHTML = list.map(noteHTML).join(""); box.querySelectorAll("textarea").forEach(grow); save(); }
+    const persist = debounce(save, 400);
+    box.addEventListener("input", (e) => {
+      if (e.target.tagName !== "TEXTAREA") return;
+      const n = list.find((x) => x.id === e.target.closest(".note").dataset.id);
+      if (n) { n.text = e.target.value; n.at = Date.now(); delete n.ex; grow(e.target); persist(); }
+    });
+    box.addEventListener("click", (e) => {
+      const b = e.target.closest(".x"); if (!b) return;
+      const el = b.closest(".note"), id = el.dataset.id;
+      list = list.filter((x) => x.id !== id); save();
+      el.classList.add("leaving");
+      setTimeout(() => el.remove(), reduceMotion ? 0 : 290);
+      toast("Note deleted");
+    });
+    document.querySelector(".swatches").addEventListener("click", (e) => {
+      const b = e.target.closest(".sw"); if (!b) return;
+      color = +b.dataset.c;
+      document.querySelectorAll(".sw").forEach((s) => s.setAttribute("aria-pressed", String(s === b)));
+    });
+    const input = $("#note-new");
+    function add() {
+      const text = input.value.trim(); if (!text) { input.focus(); return; }
+      const n = { id: uid(), text, color, at: Date.now() };
+      list.unshift(n); input.value = "";
+      box.insertAdjacentHTML("afterbegin", noteHTML(n)); grow(box.querySelector("textarea"));
+      save(); toast("Note added");
+    }
+    $("#note-form").addEventListener("submit", (e) => { e.preventDefault(); add(); });
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); add(); } });
+    render();
+  })();
+
+  // ---------- ideas ----------
+  (() => {
+    let list = store.get("ideas", null);
+    if (!list) {
+      list = [{ id: uid(), title: "Example idea: weekend market stall", body: "Hand-printed tote bags with local bird drawings.\n\n• Test three designs with friends\n• Price around $18\n• Ask about a spot at the Saturday market", at: Date.now() - 864e5, ex: true }];
+      store.set("ideas", list);
+    }
+    let active = store.get("ideaActive", list[0] && list[0].id);
+    if (!list.some((x) => x.id === active)) active = list[0] && list[0].id;
+    const ul = $("#idea-list"), tIn = $("#idea-title"), bIn = $("#idea-body"), status = $("#idea-status");
+    const cur = () => list.find((x) => x.id === active);
+    const words = (s) => (s.trim().match(/\S+/g) || []).length;
+
+    function renderList() {
+      ul.innerHTML = list.map((x) => {
+        const snip = x.body.split("\n").find((l) => l.trim()) || "Empty";
+        return `<li><button type="button" class="idea-item${x.id === active ? " on" : ""}" data-id="${x.id}"><strong>${esc(x.title || "Untitled idea")}</strong><span>${esc(snip)}</span><time>${rel(x.at)}</time></button></li>`;
+      }).join("");
+      $("#ideas-count").textContent = list.length;
+    }
+    function renderEditor(anim) {
+      const x = cur(), ed = $("#idea-editor");
+      ed.hidden = !x; $("#idea-empty").hidden = !!x;
+      $("#idea-confirm").hidden = true; $("#idea-del").hidden = false;
+      if (!x) return;
+      tIn.value = x.title; bIn.value = x.body; growTitle(); $("#idea-words").textContent = `${words(x.body)} words`;
+      if (anim && !reduceMotion) { ed.classList.remove("swap"); void ed.offsetWidth; ed.classList.add("swap"); }
+    }
+    const save = () => { store.set("ideas", list); store.set("ideaActive", active); summary(); };
+    const persist = debounce(() => { save(); status.classList.add("show"); clearTimeout(status.t); status.t = setTimeout(() => status.classList.remove("show"), 1400); renderList(); }, 450);
+    function growTitle() { tIn.style.height = "auto"; tIn.style.height = tIn.scrollHeight + "px"; }
+    addEventListener("resize", debounce(growTitle, 150));
+    function edit() {
+      growTitle();
+      const x = cur(); if (!x) return;
+      x.title = tIn.value; x.body = bIn.value; x.at = Date.now(); delete x.ex;
+      $("#idea-words").textContent = `${words(x.body)} words`; persist();
+    }
+    tIn.addEventListener("input", edit); bIn.addEventListener("input", edit);
+    tIn.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); bIn.focus(); } });
+    ul.addEventListener("click", (e) => {
+      const b = e.target.closest(".idea-item"); if (!b || b.dataset.id === active) return;
+      active = b.dataset.id; store.set("ideaActive", active); renderList(); renderEditor(true);
+    });
+    $("#idea-new").addEventListener("click", () => {
+      const x = { id: uid(), title: "", body: "", at: Date.now() };
+      list.unshift(x); active = x.id; save(); renderList(); renderEditor(true); tIn.focus();
+    });
+    $("#idea-del").addEventListener("click", () => { $("#idea-confirm").hidden = false; $("#idea-del").hidden = true; $("#idea-no").focus(); });
+    $("#idea-no").addEventListener("click", () => { $("#idea-confirm").hidden = true; $("#idea-del").hidden = false; });
+    $("#idea-yes").addEventListener("click", () => {
+      list = list.filter((x) => x.id !== active); active = list[0] && list[0].id;
+      save(); renderList(); renderEditor(true); toast("Idea deleted");
+    });
+    renderList(); renderEditor(false);
+  })();
+
+  // ---------- move data between devices ----------
+  (() => {
+    const dlg = $("#sync-dlg"), out = $("#sync-out"), inp = $("#sync-in"), msg = $("#sync-msg");
+    const KEYS = ["notes", "ideas", "events", "name", "loc", "unit", "h12"];
+    const b64 = { enc: (u8) => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); },
+                  dec: (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0)) };
+    async function gz(u8, dir) {
+      const stream = new Blob([u8]).stream().pipeThrough(dir === "c" ? new CompressionStream("gzip") : new DecompressionStream("gzip"));
+      return new Uint8Array(await new Response(stream).arrayBuffer());
+    }
+    function snapshot() { const o = { v: 1 }; for (const k of KEYS) o[k] = store.get(k, null); return o; }
+    async function encode() {
+      const raw = new TextEncoder().encode(JSON.stringify(snapshot()));
+      if (window.CompressionStream) { try { return "DAYBOOK-Z:" + b64.enc(await gz(raw, "c")); } catch (e) {} }
+      return "DAYBOOK:" + b64.enc(raw);
+    }
+    async function decode(code) {
+      code = code.replace(/\s+/g, "");
+      if (code.startsWith("{")) return JSON.parse(code);
+      if (code.startsWith("DAYBOOK-Z:")) return JSON.parse(new TextDecoder().decode(await gz(b64.dec(code.slice(10)), "d")));
+      if (code.startsWith("DAYBOOK:")) return JSON.parse(new TextDecoder().decode(b64.dec(code.slice(8))));
+      throw new Error("format");
+    }
+    // merge by id; the newer edit wins; examples are not copied
+    function mergeList(mine, theirs) {
+      const map = new Map((mine || []).map((x) => [x.id, x]));
+      for (const x of theirs || []) {
+        if (!x || !x.id || x.ex) continue;
+        const m = map.get(x.id);
+        if (!m || (x.at || 0) > (m.at || 0)) map.set(x.id, x);
+      }
+      return [...map.values()].sort((a, b) => (b.at || 0) - (a.at || 0));
+    }
+    function apply(d) {
+      if (!d || typeof d !== "object") throw new Error("format");
+      const count = (d.notes || []).filter((x) => !x.ex).length + (d.ideas || []).filter((x) => !x.ex).length +
+        Object.values(d.events || {}).reduce((n, a) => n + a.length, 0);
+      store.set("notes", mergeList(store.get("notes", []), d.notes));
+      store.set("ideas", mergeList(store.get("ideas", []), d.ideas));
+      const ev = store.get("events", {});
+      for (const [day, list] of Object.entries(d.events || {})) {
+        const have = new Set((ev[day] || []).map((x) => x.id));
+        ev[day] = (ev[day] || []).concat((list || []).filter((x) => x && x.id && !have.has(x.id) && !/^Example/.test(x.text)));
+        if (!ev[day].length) delete ev[day];
+      }
+      store.set("events", ev);
+      if (d.name && !store.get("name", "")) store.set("name", d.name);
+      if (d.loc && !store.get("loc", null)) store.set("loc", d.loc);
+      return count;
+    }
+    $("#sync-btn").addEventListener("click", () => { msg.textContent = ""; out.hidden = true; dlg.showModal ? dlg.showModal() : dlg.setAttribute("open", ""); });
+    dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+    $("#sync-copy").addEventListener("click", async () => {
+      const code = await encode();
+      out.value = code; out.hidden = false;
+      try { await navigator.clipboard.writeText(code); toast("Copied. Paste it on your other device"); }
+      catch (e) { out.focus(); out.select(); toast("Select the code and copy it"); }
+    });
+    $("#sync-save").addEventListener("click", async () => {
+      const json = JSON.stringify(snapshot(), null, 1), filename = `daybook-backup-${dkey(new Date())}.json`;
+      // inside the Claude viewer, files go through its save dialog
+      const dl = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null;
+      if (dl) {
+        try { await dl.save({ filename, data: json }); toast("Backup saved"); }
+        catch (e) { if (e && e.code !== "declined") toast("Couldn't save the file. Use Copy my data instead."); }
+        return;
+      }
+      const blob = new Blob([json], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    });
+    async function load(text) {
+      try {
+        const n = apply(await decode(text));
+        msg.textContent = `Added. ${n} item${n === 1 ? "" : "s"} checked. Reloading…`;
+        setTimeout(() => location.reload(), 900);
+      } catch (e) {
+        msg.textContent = "That code didn't work. Copy the whole code again, starting with DAYBOOK, and paste it here.";
+      }
+    }
+    $("#sync-load").addEventListener("click", () => { const t = inp.value.trim(); if (!t) { inp.focus(); msg.textContent = "Paste the code from your other device first."; return; } load(t); });
+    $("#sync-file").addEventListener("change", async (e) => { const f = e.target.files[0]; if (f) load(await f.text()); e.target.value = ""; });
+  })();
+
+  // ---------- boot ----------
+  tick();
+  setTimeout(() => { tick(); setInterval(tick, 1000); }, 1000 - (Date.now() % 1000));
+  cal.render(0);
+  summary();
+  loadWeather(false);
+  setInterval(() => loadWeather(true), 30 * 60e3);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeName); else sizeName();
+  sizeName();
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
