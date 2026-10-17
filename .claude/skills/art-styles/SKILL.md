@@ -22,6 +22,21 @@ Only after the user picks, build the image prompt: the subject, then the chosen 
 prompt text below. If the image model accepts reference images, attach the matching file
 from `references/`.
 
+## Generating: Gemini through OmniRoute v3.8.51
+
+The session-start hook installs and starts OmniRoute v3.8.51 on `http://localhost:20128`
+and connects Gemini when `GEMINI_API_KEY` is set. Check the image models with
+`curl -s localhost:20128/v1/models/image`, then generate:
+
+```bash
+curl -s -X POST localhost:20128/v1/images/generations -H "Content-Type: application/json" \
+  -d '{"model":"gemini/gemini-3.1-flash-image","prompt":"<subject + style prompt>","n":1,"response_format":"b64_json"}' \
+  | python3 -c "import sys,json,base64;open('image.png','wb').write(base64.b64decode(json.load(sys.stdin)['data'][0]['b64_json']))"
+```
+
+Save the result under `images/` and send it to the user. If `GEMINI_API_KEY` is missing,
+show the user the full prompt and say a key is needed.
+
 ## Style prompts
 
 ### 1. Manga cover (`references/1-manga-cover.jpg`)
