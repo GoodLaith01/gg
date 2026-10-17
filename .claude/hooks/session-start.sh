@@ -20,7 +20,8 @@ if [ "$(omniroute --version 2>/dev/null | tail -1)" != "$OMNIROUTE_VERSION" ]; t
   npm install -g "omniroute@${OMNIROUTE_VERSION}" >/dev/null 2>&1
 fi
 
-omniroute serve --no-open --daemon --no-tray >/dev/null 2>&1 || true
+# Node's fetch ignores HTTPS_PROXY unless told to, and outbound traffic must go through it.
+NODE_USE_ENV_PROXY=1 omniroute serve --no-open --daemon --no-tray >/dev/null 2>&1 || true
 
 # Connect Gemini once a key is stored as the GEMINI_API_KEY environment secret.
 if [ -n "${GEMINI_API_KEY:-}" ]; then

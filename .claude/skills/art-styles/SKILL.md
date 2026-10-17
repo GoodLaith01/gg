@@ -22,20 +22,22 @@ Only after the user picks, build the image prompt: the subject, then the chosen 
 prompt text below. If the image model accepts reference images, attach the matching file
 from `references/`.
 
-## Generating: Gemini through OmniRoute v3.8.51
+## Generating with Gemini
 
-The session-start hook installs and starts OmniRoute v3.8.51 on `http://localhost:20128`
-and connects Gemini when `GEMINI_API_KEY` is set. Check the image models with
-`curl -s localhost:20128/v1/models/image`, then generate:
+OmniRoute v3.8.51 has no image route for a Gemini API key (its only Gemini image provider,
+`antigravity`, needs a Google sign-in), so images go straight to Gemini's API:
 
 ```bash
-curl -s -X POST localhost:20128/v1/images/generations -H "Content-Type: application/json" \
-  -d '{"model":"gemini/gemini-3.1-flash-image","prompt":"<subject + style prompt>","n":1,"response_format":"b64_json"}' \
-  | python3 -c "import sys,json,base64;open('image.png','wb').write(base64.b64decode(json.load(sys.stdin)['data'][0]['b64_json']))"
+mkdir -p images
+.claude/skills/art-styles/make-image.sh "<subject + style prompt>" images/<name>.png \
+  .claude/skills/art-styles/references/<chosen style file>
 ```
 
-Save the result under `images/` and send it to the user. If `GEMINI_API_KEY` is missing,
+It tries `gemini-3.1-flash-image-preview`, then `gemini-2.5-flash-image` (override with
+`GEMINI_IMAGE_MODEL`). Send the saved image to the user. If `GEMINI_API_KEY` is missing,
 show the user the full prompt and say a key is needed.
+
+OmniRoute v3.8.51 is still installed and started by the session-start hook for text models.
 
 ## Style prompts
 
